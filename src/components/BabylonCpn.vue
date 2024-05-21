@@ -29,6 +29,7 @@ export default {
   mounted() {
     this.initializeBabylon();
   },
+
   methods: {
     async initializeBabylon() {
       // Lấy thẻ canvas
