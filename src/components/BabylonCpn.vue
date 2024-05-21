@@ -10,12 +10,9 @@ import {
   Scene,
   ArcRotateCamera,
   Vector3,
-  MeshBuilder,
-  Texture,
-  StandardMaterial,
+  Layer,
   SceneLoader,
   HemisphericLight,
-  Color3,
   VideoTexture
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
@@ -48,31 +45,26 @@ export default {
         var light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
         light.intensity = 0.7;
             // Thêm camera
-    var camera = new ArcRotateCamera("camera", 0, Math.PI / 2, 10, new Vector3(0, 0, 0), scene);
-    camera.attachControl(canvas, true);
-    camera.lowerBetaLimit = Math.PI / 2;
-    camera.upperBetaLimit = Math.PI / 2;
-    camera.lowerAlphaLimit = null;
-    camera.upperAlphaLimit = null;
-    camera.wheelPrecision = 100;
-
+        const camera = new ArcRotateCamera('mainCam', 0, Math.PI/2, 6, Vector3.Zero(), scene, true);
+        camera.attachControl(canvas, true);
+        camera.attachControl(canvas);
 
      // Tạo một phần tử video
-     const video = document.createElement("video");
-    const constraints = {
-      video: { facingMode: "environment" },
-    };
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    video.srcObject = stream;
-    video.play();
-
-    // Tạo video texture trong Babylon.js
-    const videoTexture = new VideoTexture("videoTexture", video, scene, true, true);
-
-    // Tùy chỉnh texture nếu cần
-    videoTexture.uScale = -1; // Ví dụ: đảo ngược trục ngang
-    
-
+     const videoLayer = new Layer('videoLayer', null, scene, true);
+     const videoTexture = 
+        VideoTexture
+        .CreateFromWebCam(
+            scene, (videoTexture) => {
+                videoTexture._invertY = false;
+                videoTexture
+                videoLayer.texture = videoTexture;
+            }, {
+                minWidth: 640,
+                minHeight: 480,
+                maxWidth: 1920,
+                maxHeight: 1080,
+                deviceId: ''
+            });
     // Tải mô hình 3D
     SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, function (meshes) {
       // Đặt vị trí của mô hình nếu cần
