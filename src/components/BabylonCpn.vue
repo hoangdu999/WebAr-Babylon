@@ -72,7 +72,7 @@ export default {
       this.addLight(scene);
 
       // Thêm camera
-      this.camera = this.addCamera(scene);
+      // this.camera = this.addCamera(scene);
 
       // Thêm video layer
       this.addVideoLayer(scene);
@@ -122,21 +122,55 @@ export default {
     },
 
     addVideoLayer(scene) {
+      // const videoLayer = new Layer('videoLayer', null, scene, true);
+      // VideoTexture.CreateFromWebCam(
+      //   scene,
+      //   (videoTexture) => {
+      //     videoTexture._invertY = false;
+
+      //     videoLayer.texture = videoTexture;
+      //   },
+      //   {
+      //     minWidth: 640,
+      //     minHeight: 480,
+      //     maxWidth: 1920,
+      //     maxHeight: 1080,
+      //     deviceId: ''
+      //   }
+      // );
       const videoLayer = new Layer('videoLayer', null, scene, true);
-      VideoTexture.CreateFromWebCam(
-        scene,
-        (videoTexture) => {
-          videoTexture._invertY = false;
-          videoLayer.texture = videoTexture;
-        },
-        {
-          minWidth: 640,
-          minHeight: 480,
-          maxWidth: 1920,
-          maxHeight: 1080,
-          deviceId: ''
-        }
-      );
+
+// Hàm lấy deviceId của camera sau
+      function getRearCameraDeviceId(callback) {
+        navigator.mediaDevices.enumerateDevices().then((devices) => {
+          const videoDevices = devices.filter(device => device.kind === 'videoinput');
+          const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
+
+          if (rearCamera) {
+            callback(rearCamera.deviceId);
+          } else {
+            console.error('Không tìm thấy camera sau');
+            callback(null); 
+          }
+        });
+      }
+
+      getRearCameraDeviceId((deviceId) => {
+        VideoTexture.CreateFromWebCam(
+          scene,
+          (videoTexture) => {
+            videoTexture._invertY = false;
+            videoLayer.texture = videoTexture;
+          },
+          {
+            minWidth: 480,
+            minHeight: 640,
+            maxWidth: 1080,
+            maxHeight: 1920,
+            deviceId: deviceId // Sử dụng deviceId của camera sau
+          }
+        );
+      });
     },
 
     async loadModel(scene) {
