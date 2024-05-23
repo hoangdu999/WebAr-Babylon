@@ -61,9 +61,8 @@ export default {
       window.addEventListener("resize", () => {
         this.engine.resize();
       });
-
       // Thêm xử lý chạm
-      this.setupTouchHandlers(canvas);
+      //this.setupTouchHandlers(canvas);
     },
 
     async createScene() {
@@ -79,8 +78,8 @@ export default {
       this.addVideoLayer(scene);
 
       // Thiết lập AR
-      await this.setupXR(scene);
-
+      // await this.setupXR(scene);
+      await this.loadModel(scene);
       // Tạo mặt đất
       const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
       ground.rotation.x = Math.PI / 2;
