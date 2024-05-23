@@ -122,13 +122,29 @@ export default {
     },
 
     addVideoLayer(scene, canvas) {
+      
       var layer = new Layer("background", null, scene, true);
-      VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
-      videoTexture.vScale = -1.0;
-      videoTexture.uScale = canvas.width / canvas.height * videoTexture.getSize().height / videoTexture.getSize().width;
-      layer.texture = videoTexture;
-      }, { maxWidth: 640, maxHeight: 480 });
 
+      // Yêu cầu quyền truy cập camera và micro
+      navigator.mediaDevices.getUserMedia({
+        audio: true,
+        video: {
+          facingMode: "environment" // Yêu cầu camera phía sau (rear camera)
+        }
+      })
+      .then((stream) => {
+        // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
+
+
+        VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
+          videoTexture.vScale = -1.0;
+          videoTexture.uScale = canvas.width / canvas.height * videoTexture.getSize().height / videoTexture.getSize().width;
+          layer.texture = videoTexture;
+        }, { maxWidth: 640, maxHeight: 480 });
+      })
+      .catch((err) => {
+        console.error("Error accessing camera and microphone: ", err);
+      });
     },
 
     async loadModel(scene) {
@@ -243,5 +259,9 @@ export default {
 body {
   margin: 0;
   overflow: hidden;
+}
+canvas{
+  width: 100%;
+  height: 100%;
 }
 </style>
