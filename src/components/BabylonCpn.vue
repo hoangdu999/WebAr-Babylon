@@ -50,7 +50,7 @@ export default {
       this.engine = new Engine(canvas, true);
 
       // Tạo scene
-      this.scene = await this.createScene();
+      this.scene = await this.createScene(canvas);
 
       // Render loop
       this.engine.runRenderLoop(() => {
@@ -65,17 +65,17 @@ export default {
       //this.setupTouchHandlers(canvas);
     },
 
-    async createScene() {
+    async createScene(canvas) {
       var scene = new Scene(this.engine);
 
       // Thêm ánh sáng
       this.addLight(scene);
 
       // Thêm camera
-      // this.camera = this.addCamera(scene);
+      this.camera = this.addCamera(scene);
 
       // Thêm video layer
-      this.addVideoLayer(scene);
+      this.addVideoLayer(scene, canvas);
 
       // Thiết lập AR
       // await this.setupXR(scene);
@@ -121,56 +121,14 @@ export default {
       return camera;
     },
 
-    addVideoLayer(scene) {
-      // const videoLayer = new Layer('videoLayer', null, scene, true);
-      // VideoTexture.CreateFromWebCam(
-      //   scene,
-      //   (videoTexture) => {
-      //     videoTexture._invertY = false;
+    addVideoLayer(scene, canvas) {
+      var layer = new Layer("background", null, scene, true);
+      VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
+      videoTexture.vScale = -1.0;
+      videoTexture.uScale = canvas.width / canvas.height * videoTexture.getSize().height / videoTexture.getSize().width;
+      layer.texture = videoTexture;
+      }, { maxWidth: 640, maxHeight: 480 });
 
-      //     videoLayer.texture = videoTexture;
-      //   },
-      //   {
-      //     minWidth: 640,
-      //     minHeight: 480,
-      //     maxWidth: 1920,
-      //     maxHeight: 1080,
-      //     deviceId: ''
-      //   }
-      // );
-      const videoLayer = new Layer('videoLayer', null, scene, true);
-
-// Hàm lấy deviceId của camera sau
-      function getRearCameraDeviceId(callback) {
-        navigator.mediaDevices.enumerateDevices().then((devices) => {
-          const videoDevices = devices.filter(device => device.kind === 'videoinput');
-          const rearCamera = videoDevices.find(device => device.label.toLowerCase().includes('back') || device.label.toLowerCase().includes('rear'));
-
-          if (rearCamera) {
-            callback(rearCamera.deviceId);
-          } else {
-            console.error('Không tìm thấy camera sau');
-            callback(null); 
-          }
-        });
-      }
-
-      getRearCameraDeviceId((deviceId) => {
-        VideoTexture.CreateFromWebCam(
-          scene,
-          (videoTexture) => {
-            videoTexture._invertY = false;
-            videoLayer.texture = videoTexture;
-          },
-          {
-            minWidth: 480,
-            minHeight: 640,
-            maxWidth: 1080,
-            maxHeight: 1920,
-            deviceId: deviceId // Sử dụng deviceId của camera sau
-          }
-        );
-      });
     },
 
     async loadModel(scene) {
