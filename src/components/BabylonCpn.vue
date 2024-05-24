@@ -1,6 +1,7 @@
 <template>
   <div>
     <canvas id="renderCanvas" touch-action="none" style="width: 100%; height: 100%;"></canvas>
+    <div id="log"></div>
   </div>
 </template>
 
@@ -63,6 +64,10 @@ export default {
       });
       // Thêm xử lý chạm
       //this.setupTouchHandlers(canvas);
+      
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
     },
 
     async createScene(canvas) {
@@ -138,13 +143,17 @@ export default {
           videoTexture.uScale = -1.0;
           videoTexture.vScale = -1.0;
           layer.texture = videoTexture;
-        }, { maxWidth: 640, maxHeight: 480 });
+        
+        }, {  maxWidth: 1920, maxHeight: 1080 });
       })
       .catch((err) => {
         console.error("Error accessing camera and microphone: ", err);
       });
     },
-
+    logMessage(message) {
+      const logDiv = document.getElementById('log');
+      logDiv.innerHTML += message + '<br>';
+    },
     async loadModel(scene) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
