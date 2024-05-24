@@ -134,7 +134,7 @@ export default {
       navigator.mediaDevices.getUserMedia({
         audio: true,
         video: {
-          facingMode: "environment" // Yêu cầu camera phía sau (rear camera)
+          facingMode: { exact: "environment" } // Yêu cầu camera phía sau (rear camera)
         }
       })
       .then((stream) => {
