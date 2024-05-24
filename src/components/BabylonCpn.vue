@@ -134,11 +134,9 @@ export default {
       })
       .then((stream) => {
         // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
-
-
         VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
+          videoTexture.uScale = -1.0;
           videoTexture.vScale = -1.0;
-          videoTexture.uScale = canvas.width / canvas.height * videoTexture.getSize().height / videoTexture.getSize().width;
           layer.texture = videoTexture;
         }, { maxWidth: 640, maxHeight: 480 });
       })
@@ -163,94 +161,6 @@ export default {
       });
     },
 
-    setupTouchHandlers(canvas) {
-      let touchStartTime = 0;
-      let touchCount = 0;
-
-      canvas.addEventListener('touchstart', (event) => {
-        touchStartTime = new Date().getTime();
-        touchCount = event.touches.length;
-
-        if (touchCount === 2) {
-          this.resetCameraPosition();
-        }
-      });
-
-      canvas.addEventListener('touchend', (event) => {
-        const touchEndTime = new Date().getTime();
-        const touchDuration = touchEndTime - touchStartTime;
-
-        if (touchDuration < 500 && touchCount === 1) {
-          const touch = event.changedTouches[0];
-          const pickResult = this.scene.pick(touch.clientX, touch.clientY);
-
-          if (pickResult.hit && pickResult.pickedMesh.name === 'ground') {
-            this.moveModelToPosition(pickResult.pickedPoint);
-          }
-        }
-      });
-    },
-
-    resetCameraPosition() {
-      this.camera.setTarget(new Vector3(0, 1, 0));
-      this.camera.alpha = 7.349039862224447;
-      this.camera.beta = 1.2023107691067825;
-      this.camera.radius = 10;
-    },
-
-    moveModelToPosition(position) {
-      if (this.model) {
-        this.model.position = position;
-        this.model.rotation = new Vector3(0, Math.random() * 2 * Math.PI, 0);
-
-        // Tạo hoạt hình tỷ lệ
-        const animation = new Animation(
-          "scaleAnimation",
-          "scaling",
-          30,
-          Animation.ANIMATIONTYPE_VECTOR3,
-          Animation.ANIMATIONLOOPMODE_CYCLE
-        );
-
-        const keys = [];
-        keys.push({ frame: 0, value: new Vector3(0.1, 0.1, 0.1) });
-        keys.push({ frame: 15, value: new Vector3(1, 1, 1) });
-
-        animation.setKeys(keys);
-        this.model.animations = [];
-        this.model.animations.push(animation);
-
-        this.scene.beginAnimation(this.model, 0, 15, false);
-      }
-    },
-
-    async setupXR(scene) {
-      const xrHelper = await WebXRDefaultExperience.CreateAsync(scene, {
-        floorMeshes: []
-      });
-
-      // Sử dụng tính năng plane detection để nhận diện địa hình
-      const featuresManager = xrHelper.baseExperience.featuresManager;
-      const xrPlanes = featuresManager.enableFeature(
-        WebXRPlaneDetector.Name,
-        "latest"
-      );
-
-      xrPlanes.onDetectedObservable.add((plane) => {
-        console.log("Plane detected:", plane);
-
-        if (!this.model) {
-          return;
-        }
-
-        // Đặt mô hình trên mặt phẳng được phát hiện
-        this.model.position = plane.polygonMesh.position.clone();
-        this.model.rotationQuaternion = plane.polygonMesh.rotationQuaternion.clone();
-        this.model.scaling = new Vector3(1, 1, 1);
-      });
-
-      return xrHelper;
-    }
   }
 }
 </script>
