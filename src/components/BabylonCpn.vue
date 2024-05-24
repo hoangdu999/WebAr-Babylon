@@ -144,7 +144,7 @@ export default {
           videoTexture.vScale = -1.0;
           layer.texture = videoTexture;
         
-        }, {  maxWidth: 1920, maxHeight: 1080 });
+        }, {  maxWidth: 1920, maxHeight: 1080 ,facingMode: "environment"});
       })
       .catch((err) => {
         console.error("Error accessing camera and microphone: ", err);
