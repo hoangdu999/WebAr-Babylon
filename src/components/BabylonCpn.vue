@@ -140,8 +140,8 @@ export default {
       .then((stream) => {
         // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
         VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
-          videoTexture.uScale = -1.0;
-          videoTexture.vScale = -1.0;
+          videoTexture.uScale = 1.0;
+          videoTexture.vScale = 1.0;
           layer.texture = videoTexture;
         
         }, {  maxWidth: 1920, maxHeight: 1080 ,facingMode: "environment"});
