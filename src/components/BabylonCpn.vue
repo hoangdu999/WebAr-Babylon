@@ -34,6 +34,7 @@ export default {
       shadowGenerator: null,
       model: null, // Thêm model vào data
       isModelLoaded: false,
+      isModelPlaced: false, 
     };
   },
   mounted() {
@@ -160,6 +161,7 @@ export default {
      
         this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
         this.isModelLoaded = true; 
+        this.model.setEnabled(false); 
       }, null, (scene, message) => {
         console.error(message);
       });
@@ -189,7 +191,9 @@ export default {
        // Đặt mô hình lên mặt phẳng được phát hiện
         if (this.isModelLoaded && this.model) {
           this.model.position = plane.center;
-          this.model.position.y = plane.center.y + 0.1; // Slightly above the ground
+          this.model.position.y = plane.center.y + 0.1; 
+          this.model.setEnabled(true);// Hiển thị mô hình khi đã đặt vị trí
+          this.isModelPlaced = true; // Đánh dấu mô hình đã được đặt
         }
       });
 
