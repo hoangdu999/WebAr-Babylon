@@ -35,7 +35,7 @@ export default {
       scene: null,
       camera: null,
       shadowGenerator: null,
-      model: null, // Thêm model vào data
+      model: null,
       xr: null,
       planeDetected: false, 
     };
@@ -46,162 +46,165 @@ export default {
 
   methods: {
     async initializeBabylon() {
-      // Lấy thẻ canvas
-      var canvas = document.getElementById("renderCanvas");
+      try {
+        var canvas = document.getElementById("renderCanvas");
 
-      // Khởi tạo Babylon.js Engine
-      this.engine = new Engine(canvas, true);
+        this.engine = new Engine(canvas, true);
 
-      // Tạo scene
-      this.scene = await this.createScene(canvas);
+        this.scene = await this.createScene(canvas);
 
-      // Render loop
-      this.engine.runRenderLoop(() => {
-        this.scene.render();
-      });
+        this.engine.runRenderLoop(() => {
+          this.scene.render();
+        });
 
-      // Resize
-      window.addEventListener("resize", () => {
-        this.engine.resize();
-      });
-      // Thêm xử lý chạm
-      //this.setupTouchHandlers(canvas);
-      
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+        window.addEventListener("resize", () => {
+          this.engine.resize();
+        });
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+      } catch (error) {
+        console.error("Error initializing Babylon.js:", error);
+      }
     },
 
     async createScene(canvas) {
-      var scene = new Scene(this.engine);
+      try {
+        var scene = new Scene(this.engine);
 
-      // Thêm ánh sáng
-      this.addLight(scene);
+        this.addLight(scene);
+        this.camera = this.addCamera(scene);
+        this.addVideoLayer(scene, canvas);
+        await this.setupXR(scene);
 
-      // Thêm camera
-      this.camera = this.addCamera(scene);
+        const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
+        ground.rotation.x = Math.PI / 2;
+        ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
+        ground.receiveShadows = true;
+        ground.position.y = 0;
 
-      // Thêm video layer
-      this.addVideoLayer(scene, canvas);
-
-      // Thiết lập AR
-      await this.setupXR(scene);
-
-      
-      // Tạo mặt đất
-      const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
-      ground.rotation.x = Math.PI / 2;
-      ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
-      ground.receiveShadows = true;
-      ground.position.y = 0;
-
-      return scene;
+        return scene;
+      } catch (error) {
+        console.error("Error creating scene:", error);
+      }
     },
 
     addLight(scene) {
-      // Xóa ánh sáng mặc định nếu có
-      scene.lights.forEach(light => light.dispose());
+      try {
+        scene.lights.forEach(light => light.dispose());
 
-      // Tạo ánh sáng mới
-      var light = new DirectionalLight("dirLight", new Vector3(-2, -3, 1), scene);
-      light.position = new Vector3(6, 9, 3);
+        var light = new DirectionalLight("dirLight", new Vector3(-2, -3, 1), scene);
+        light.position = new Vector3(6, 9, 3);
 
-      // Tạo Shadow Generator
-      this.shadowGenerator = new ShadowGenerator(1024, light);
-      this.shadowGenerator.useBlurExponentialShadowMap = true;
-      this.shadowGenerator.blurKernel = 32;
+        this.shadowGenerator = new ShadowGenerator(1024, light);
+        this.shadowGenerator.useBlurExponentialShadowMap = true;
+        this.shadowGenerator.blurKernel = 32;
+      } catch (error) {
+        console.error("Error adding light:", error);
+      }
     },
 
     addCamera(scene) {
-      // Điều chỉnh vị trí và góc quay của camera để có góc nhìn như trong hình
-      const alpha = 7.349039862224447; // Góc quay quanh trục Y
-      const beta = 1.2023107691067825; // Góc quay quanh trục X (đảm bảo mô hình lật ngược lên)
-      const radius = 10; // Khoảng cách từ camera đến mục tiêu
+      try {
+        const alpha = 7.349039862224447;
+        const beta = 1.2023107691067825;
+        const radius = 10;
 
-      const camera = new ArcRotateCamera('mainCam', alpha, beta, radius, new Vector3(0, 1, 0), scene, true);
-      camera.attachControl(scene.getEngine().getRenderingCanvas(), true);
+        const camera = new ArcRotateCamera('mainCam', alpha, beta, radius, new Vector3(0, 1, 0), scene, true);
+        camera.attachControl(scene.getEngine().getRenderingCanvas(), true);
 
-      // Thêm sự kiện để in giá trị alpha, beta, radius khi camera thay đổi
-      camera.onViewMatrixChangedObservable.add(() => {
-        console.log(`Alpha: ${camera.alpha}, Beta: ${camera.beta}, Radius: ${camera.radius}`);
-      });
+        camera.onViewMatrixChangedObservable.add(() => {
+          console.log(`Alpha: ${camera.alpha}, Beta: ${camera.beta}, Radius: ${camera.radius}`);
+        });
 
-      return camera;
+        return camera;
+      } catch (error) {
+        console.error("Error adding camera:", error);
+      }
     },
 
     addVideoLayer(scene, canvas) {
-      
-      var layer = new Layer("background", null, scene, true);
+      try {
+        var layer = new Layer("background", null, scene, true);
 
-      // Yêu cầu quyền truy cập camera và micro
-      navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: {
-          facingMode: { exact: "environment" } // Yêu cầu camera phía sau (rear camera)
-        }
-      })
-      .then((stream) => {
-        // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
-        VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
-          videoTexture.uScale = 1.0;
-          videoTexture.vScale = -1.0;
-          layer.texture = videoTexture;
-        
-        }, {  maxWidth: 1920, maxHeight: 1080 ,facingMode: "environment"});
-      })
-      .catch((err) => {
-        console.error("Error accessing camera and microphone: ", err);
-      });
+        navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: {
+            facingMode: { exact: "environment" }
+          }
+        })
+        .then((stream) => {
+          VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
+            videoTexture.uScale = 1.0;
+            videoTexture.vScale = -1.0;
+            layer.texture = videoTexture;
+          }, { maxWidth: 1920, maxHeight: 1080, facingMode: "environment" });
+        })
+        .catch((err) => {
+          console.error("Error accessing camera and microphone: ", err);
+        });
+      } catch (error) {
+        console.error("Error adding video layer:", error);
+      }
     },
+
     logMessage(message) {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
     },
-    async loadModel(scene,position) {
-      await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
-        // Đặt vị trí của mô hình nếu cần
-        meshes.forEach((mesh) => {
-          mesh.position = position;
 
-          // Thêm các mesh vào Shadow Generator
-          this.shadowGenerator.addShadowCaster(mesh);
-        });
-        this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
-      }, null, (scene, message) => {
-        console.error(message);
-      });
-    },
-    async setupXR(scene) {
-      const xr = await scene.createDefaultXRExperienceAsync({
-        uiOptions: {
-          sessionMode: 'immersive-ar'
-        },
-        optionalFeatures: true,
-      });
-
-      this.xr = xr;
-
-      const planeDetector = await xr.baseExperience.featuresManager.enableFeature(
-        WebXRPlaneDetector.Name,
-        'latest',
-        { maxNumberOfTrackedPlanes: 1 }
-      );
-
-      planeDetector.onDetectedObservable.add((planes) => {
-        if (!this.planeDetected) {
-          planes.forEach(plane => {
-            const position = plane.polygon.reduce((acc, point) => {
-              acc.x += point.x;
-              acc.y += point.y;
-              acc.z += point.z;
-              return acc;
-            }, new Vector3(0, 0, 0)).scaleInPlace(1 / plane.polygon.length);
-            
-            this.loadModel(scene, position);
+    async loadModel(scene, position) {
+      try {
+        await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
+          meshes.forEach((mesh) => {
+            mesh.position = position;
+            this.shadowGenerator.addShadowCaster(mesh);
           });
-          this.planeDetected = true;
-        }
-      });
+          this.model = meshes[0];
+        }, null, (scene, message) => {
+          console.error(message);
+        });
+      } catch (error) {
+        console.error("Error loading model:", error);
+      }
+    },
+
+    async setupXR(scene) {
+      try {
+        const xr = await scene.createDefaultXRExperienceAsync({
+          uiOptions: {
+            sessionMode: 'immersive-ar'
+          },
+          optionalFeatures: true,
+        });
+
+        this.xr = xr;
+
+        const planeDetector = await xr.baseExperience.featuresManager.enableFeature(
+          WebXRPlaneDetector.Name,
+          'latest',
+          { maxNumberOfTrackedPlanes: 1 }
+        );
+
+        planeDetector.onDetectedObservable.add((planes) => {
+          if (!this.planeDetected) {
+            planes.forEach(plane => {
+              const position = plane.polygon.reduce((acc, point) => {
+                acc.x += point.x;
+                acc.y += point.y;
+                acc.z += point.z;
+                return acc;
+              }, new Vector3(0, 0, 0)).scaleInPlace(1 / plane.polygon.length);
+              
+              this.loadModel(scene, position);
+            });
+            this.planeDetected = true;
+          }
+        });
+      } catch (error) {
+        console.error("Error setting up XR:", error);
+      }
     }
   }
 }
@@ -212,7 +215,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
-canvas{
+canvas {
   width: 100%;
   height: 100%;
 }
