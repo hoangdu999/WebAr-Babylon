@@ -13,15 +13,12 @@ import {
   Vector3,
   Layer,
   SceneLoader,
-  HemisphericLight,
   VideoTexture,
   ShadowGenerator,
   DirectionalLight,
-  Color3,
+
   MeshBuilder,
-  WebXRPlaneDetector,
-  WebXRDefaultExperience,
-  Animation,
+  WebXRPlaneDetector
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -65,9 +62,11 @@ export default {
       // Thêm xử lý chạm
       //this.setupTouchHandlers(canvas);
       
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+      await this.setupXR(this.scene);
+
     },
 
     async createScene(canvas) {
@@ -169,6 +168,43 @@ export default {
         console.error(message);
       });
     },
+    async setupXR(scene) {
+      const xr = await scene.createDefaultXRExperienceAsync({
+        uiOptions: {
+          sessionMode: "immersive-ar",
+          referenceSpaceType: "local-floor"
+        }
+      });
+
+      const featuresManager = xr.baseExperience.featuresManager;
+
+      const planeDetector = featuresManager.enableFeature(WebXRPlaneDetector.Name, "latest", {
+        worldParentNode: scene
+      });
+
+      planeDetector.onPlaneAddedObservable.add((plane) => {
+        const ground = MeshBuilder.CreateGround("ground", { width: 2, height: 2 }, scene);
+        ground.position = plane.center;
+        ground.rotationQuaternion = plane.rotationQuaternion;
+        ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
+        ground.receiveShadows = true;
+        this.shadowGenerator.addShadowCaster(ground);
+
+       // Đặt mô hình lên mặt phẳng được phát hiện
+        if (this.model) {
+          this.model.position = plane.center;
+          this.model.position.y = plane.center.y + 0.1; // Slightly above the ground
+        }
+      });
+
+      planeDetector.onPlaneUpdatedObservable.add((plane) => {
+       // Xử lý các cập nhật nếu cần thiết
+      });
+
+      planeDetector.onPlaneRemovedObservable.add((plane) => {
+        // Xử lý việc loại bỏ nếu cần thiết
+      });
+   },
 
   }
 }
