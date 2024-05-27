@@ -33,6 +33,7 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null, // Thêm model vào data
+      isModelLoaded: false,
     };
   },
   mounted() {
@@ -156,14 +157,9 @@ export default {
     async loadModel(scene) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
-        meshes.forEach((mesh) => {
-          mesh.position.y = 0;
-          mesh.position.z = 0;
-
-          // Thêm các mesh vào Shadow Generator
-          this.shadowGenerator.addShadowCaster(mesh);
-        });
+     
         this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
+        this.isModelLoaded = true; 
       }, null, (scene, message) => {
         console.error(message);
       });
@@ -191,7 +187,7 @@ export default {
         this.shadowGenerator.addShadowCaster(ground);
 
        // Đặt mô hình lên mặt phẳng được phát hiện
-        if (this.model) {
+        if (this.isModelLoaded && this.model) {
           this.model.position = plane.center;
           this.model.position.y = plane.center.y + 0.1; // Slightly above the ground
         }
