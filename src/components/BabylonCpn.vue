@@ -13,12 +13,15 @@ import {
   Vector3,
   Layer,
   SceneLoader,
+  HemisphericLight,
   VideoTexture,
   ShadowGenerator,
   DirectionalLight,
-
+  Color3,
   MeshBuilder,
-  WebXRPlaneDetector
+  WebXRPlaneDetector,
+  WebXRDefaultExperience,
+  Animation,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -33,8 +36,8 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null, // Thêm model vào data
-      isModelLoaded: false,
-      isModelPlaced: false, 
+      xr: null,
+      planeDetected: false, 
     };
   },
   mounted() {
@@ -64,11 +67,9 @@ export default {
       // Thêm xử lý chạm
       //this.setupTouchHandlers(canvas);
       
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
-      await this.setupXR(this.scene);
-
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
     },
 
     async createScene(canvas) {
@@ -84,8 +85,9 @@ export default {
       this.addVideoLayer(scene, canvas);
 
       // Thiết lập AR
-      // await this.setupXR(scene);
-      await this.loadModel(scene);
+      await this.setupXR(scene);
+
+      
       // Tạo mặt đất
       const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
       ground.rotation.x = Math.PI / 2;
@@ -158,10 +160,13 @@ export default {
     async loadModel(scene) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
-     
+        meshes.forEach((mesh) => {
+          mesh.position = position;
+
+          // Thêm các mesh vào Shadow Generator
+          this.shadowGenerator.addShadowCaster(mesh);
+        });
         this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
-        this.isModelLoaded = true; 
-        this.model.setEnabled(false); 
       }, null, (scene, message) => {
         console.error(message);
       });
@@ -169,43 +174,35 @@ export default {
     async setupXR(scene) {
       const xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
-          sessionMode: "immersive-ar",
-          referenceSpaceType: "local-floor"
+          sessionMode: 'immersive-ar'
+        },
+        optionalFeatures: true,
+      });
+
+      this.xr = xr;
+
+      const planeDetector = await xr.baseExperience.featuresManager.enableFeature(
+        WebXRPlaneDetector.Name,
+        'latest',
+        { maxNumberOfTrackedPlanes: 1 }
+      );
+
+      planeDetector.onDetectedObservable.add((planes) => {
+        if (!this.planeDetected) {
+          planes.forEach(plane => {
+            const position = plane.polygon.reduce((acc, point) => {
+              acc.x += point.x;
+              acc.y += point.y;
+              acc.z += point.z;
+              return acc;
+            }, new Vector3(0, 0, 0)).scaleInPlace(1 / plane.polygon.length);
+            
+            this.loadModel(scene, position);
+          });
+          this.planeDetected = true;
         }
       });
-
-      const featuresManager = xr.baseExperience.featuresManager;
-
-      const planeDetector = featuresManager.enableFeature(WebXRPlaneDetector.Name, "latest", {
-        worldParentNode: scene
-      });
-
-      planeDetector.onPlaneAddedObservable.add((plane) => {
-        const ground = MeshBuilder.CreateGround("ground", { width: 2, height: 2 }, scene);
-        ground.position = plane.center;
-        ground.rotationQuaternion = plane.rotationQuaternion;
-        ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
-        ground.receiveShadows = true;
-        this.shadowGenerator.addShadowCaster(ground);
-
-       // Đặt mô hình lên mặt phẳng được phát hiện
-        if (this.isModelLoaded && this.model) {
-          this.model.position = plane.center;
-          this.model.position.y = plane.center.y + 0.1; 
-          this.model.setEnabled(true);// Hiển thị mô hình khi đã đặt vị trí
-          this.isModelPlaced = true; // Đánh dấu mô hình đã được đặt
-        }
-      });
-
-      planeDetector.onPlaneUpdatedObservable.add((plane) => {
-       // Xử lý các cập nhật nếu cần thiết
-      });
-
-      planeDetector.onPlaneRemovedObservable.add((plane) => {
-        // Xử lý việc loại bỏ nếu cần thiết
-      });
-   },
-
+    }
   }
 }
 </script>
