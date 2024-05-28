@@ -156,12 +156,11 @@ export default {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
     },
-    async loadModel(scene) {
+    async loadModel(scene,position) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
         meshes.forEach((mesh) => {
-          mesh.position.y = 0;
-          mesh.position.z = 0;
+          mesh.position = position;
 
           // Thêm các mesh vào Shadow Generator
           this.shadowGenerator.addShadowCaster(mesh);
@@ -181,14 +180,38 @@ export default {
           optionalFeatures: true
         });
 
+        if (!xr) {
+          this.logMessage("Failed to create XR Experience.");
+          return;
+        }
+
         this.xr = xr;
+        this.logMessage("XR Experience created successfully.");
+
         const fm = xr.baseExperience.featuresManager;
+
+        if (!fm) {
+          this.logMessage("featuresManager is undefined.");
+          return;
+        }
+
+        this.logMessage("featuresManager is available.");
 
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
         xrPlanes.onPlaneAddedObservable.add(WebXRPlane => {
           this.xr.input.xrCamera.position.y += 1.0;
           this.logMessage("PlaneAdded");
+
+          // Tính toán vị trí của mặt phẳng và tải mô hình
+          const position = WebXRPlane.polygon.reduce((acc, point) => {
+            acc.x += point.x;
+            acc.y += point.y;
+            acc.z += point.z;
+            return acc;
+          }, new Vector3(0, 0, 0)).scaleInPlace(1 / WebXRPlane.polygon.length);
+
+          this.loadModel(scene, position);
         });
 
         xrPlanes.onPlaneUpdatedObservable.add(plane => {
