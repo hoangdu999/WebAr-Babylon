@@ -38,6 +38,7 @@ export default {
       model: null, // Thêm model vào data
       xr: null,
       planeDetected: false,
+      planes: [], 
     };
   },
   mounted() {
@@ -171,72 +172,64 @@ export default {
       });
     },
     async setupXR(scene) {
-      try {
-        var xr = await scene.createDefaultXRExperienceAsync({
-          uiOptions: {
-            sessionMode: "immersive-ar",
-            referenceSpaceType: "local-floor"
-          },
-          optionalFeatures: true
-        });
+      const xr = await scene.createDefaultXRExperienceAsync({
+      uiOptions: {
+        sessionMode: "immersive-ar",
+        referenceSpaceType: "local-floor"
+      },
+      optionalFeatures: true
+      });
+      const fm = xr.baseExperience.featuresManager;
+      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
-        if (!xr) {
-          this.logMessage("Failed to create XR Experience.");
-          return;
+      xrPlanes.onPlaneAddedObservable.add(plane => {
+        if (!this.planeDetected) {
+          this.placeModelAtPlane(scene, plane);
+          this.planeDetected = true;
         }
+      });
 
-        this.xr = xr;
-        this.logMessage("XR Experience created successfully.");
-        const baseExperience = this.xr.baseExperience;
-        if (!baseExperience) {
-          this.logMessage("baseExperience is undefined.");
-          return;
+      xrPlanes.onPlaneUpdatedObservable.add(plane => {
+        if (this.planeDetected && plane.mesh) {
+          this.updateModelPosition(plane);
         }
+      });
 
-        this.logMessage("baseExperience is available.");
-        const fm = baseExperience.featuresManager;
-
-        if (!fm) {
-          this.logMessage("featuresManager is undefined.");
-          return;
+      xrPlanes.onPlaneRemovedObservable.add(plane => {
+        if (plane && plane.mesh) {
+          plane.mesh.dispose();
         }
+      });
 
-        this.logMessage("featuresManager is available.");
+      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+        this.planes.forEach(plane => plane.dispose());
+        this.planes = [];
+      });
 
-        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+      this.xr = xr;
+    },
+    placeModelAtPlane(scene, plane) {
+    // Định vị mô hình tại vị trí trung tâm của mặt phẳng
+      const centerPoint = plane.polygonDefinition.reduce((acc, p) => ({
+        x: acc.x + p.x / plane.polygonDefinition.length,
+        y: acc.y + p.y / plane.polygonDefinition.length
+      }), { x: 0, y: 0 });
 
-        xrPlanes.onPlaneAddedObservable.add(WebXRPlane => {
-          this.xr.input.xrCamera.position.y += 1.0;
-          this.logMessage("PlaneAdded");
+      const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
+      this.loadModel(scene, position);
+   },
 
-          // Tính toán vị trí của mặt phẳng và tải mô hình
-          const position = WebXRPlane.polygon.reduce((acc, point) => {
-            acc.x += point.x;
-            acc.y += point.y;
-            acc.z += point.z;
-            return acc;
-          }, new Vector3(0, 0, 0)).scaleInPlace(1 / WebXRPlane.polygon.length);
+    updateModelPosition(plane) {
+      if (this.model) {
+        const centerPoint = plane.polygonDefinition.reduce((acc, p) => ({
+          x: acc.x + p.x / plane.polygonDefinition.length,
+          y: acc.y + p.y / plane.polygonDefinition.length
+        }), { x: 0, y: 0 });
 
-          this.loadModel(scene, position);
-        });
-
-        xrPlanes.onPlaneUpdatedObservable.add(plane => {
-          this.logMessage("PlaneUpdated");
-        });
-
-        xrPlanes.onPlaneRemovedObservable.add(plane => {
-          this.logMessage("PlaneRemoved");
-        });
-
-        xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          this.logMessage("XRSessionInit");
-        });
-      } catch (error) {
-        console.error("Error setting up XR:", error);
-        this.logMessage("Error setting up XR: " + error);
+        const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
+        this.model.position = position;
       }
     }
-
   }
 }
 </script>
