@@ -187,14 +187,14 @@ export default {
 
         this.xr = xr;
         this.logMessage("XR Experience created successfully.");
-        const baseExperience = xr.baseExperience;
+        const baseExperience = this.xr.baseExperience;
         if (!baseExperience) {
           this.logMessage("baseExperience is undefined.");
           return;
         }
 
         this.logMessage("baseExperience is available.");
-        const fm = xr.baseExperience.featuresManager;
+        const fm = baseExperience.featuresManager;
 
         if (!fm) {
           this.logMessage("featuresManager is undefined.");
