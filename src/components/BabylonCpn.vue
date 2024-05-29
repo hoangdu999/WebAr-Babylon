@@ -39,9 +39,9 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null,
-      // xr: null,
-      // planeDetected: false,
-      // planes: [],
+      xr: null,
+      planeDetected: false,
+      planes: [],
     };
   },
   mounted() {
@@ -215,35 +215,38 @@ export default {
 
       const fm = xr.baseExperience.featuresManager;
 
-      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-      xrPlanes.onPlaneAddedObservable.add(async (plane) => {
-        plane.polygonDefinition.push(plane.polygonDefinition[0]);
-        var polygon_triangulation = new PolygonMeshBuilder(
-          "name",
-          plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-          scene
-        );
-        var polygon = polygon_triangulation.build(false, 0.01);
-        plane.mesh = polygon;
+      // Kiểm tra và kích hoạt tính năng phát hiện mặt phẳng
+      try {
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+        xrPlanes.onPlaneAddedObservable.add(async (plane) => {
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          var polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          var polygon = polygon_triangulation.build(false, 0.01);
+          plane.mesh = polygon;
 
-        let planeMatrix = Matrix.FromArray(
-          plane.transformationMatrix._m
-        );
-        let normal = new Vector3(
-          planeMatrix.m[8],
-          planeMatrix.m[9],
-          planeMatrix.m[10]
-        );
-        normal.normalize();
+          let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
+          let normal = new Vector3(
+            planeMatrix.m[8],
+            planeMatrix.m[9],
+            planeMatrix.m[10]
+          );
+          normal.normalize();
 
-        if (plane.xrPlane.orientation.match("Horizontal")) {
-          console.log("Horizontal plane");
+          if (plane.xrPlane.orientation.match("Horizontal")) {
+            console.log("Horizontal plane");
 
-          let position = plane.mesh.position;
-          position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
-          await this.loadModel(scene, position);
-        }
-      });
+            let position = plane.mesh.position;
+            position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
+            await this.loadModel(scene, position); // Sử dụng this.loadModel
+          }
+        });
+      } catch (error) {
+        console.error("Error enabling WebXR Plane Detector feature: ", error);
+      }
     },
   },
 };
