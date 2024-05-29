@@ -207,9 +207,7 @@ export default {
     async setupXR(scene) {
       try {
         // Kiểm tra xem thiết bị và trình duyệt có hỗ trợ WebXR Plane Detector
-        const isPlaneDetectorSupported = await navigator.xr.isSessionSupported('immersive-ar');
-
-        if (isPlaneDetectorSupported) {
+        
           const xr = await scene.createDefaultXRExperienceAsync({
             uiOptions: {
               sessionMode: "immersive-ar",
@@ -247,11 +245,11 @@ export default {
               await this.loadModel(scene, position); // Sử dụng this.loadModel
             }
           });
-        } else {
-          console.error("WebXR Plane Detector not supported on this device/browser.");
-        }
+        
       } catch (error) {
-        console.error("Error enabling WebXR Plane Detector feature: ", error);
+        this.logMessage(
+          "WebXR Plane Detector not supported" + error
+      );
       }
     },
   },
