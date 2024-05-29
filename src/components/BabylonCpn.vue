@@ -148,7 +148,6 @@ export default {
         console.error("Error accessing camera and microphone: ", err);
       });
     },
-
     logMessage(message) {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
@@ -166,7 +165,6 @@ export default {
         console.error(message);
       });
     },
-
     async setupXR(scene) {
       const xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
@@ -175,9 +173,7 @@ export default {
         },
         optionalFeatures: []
       });
-
       const fm = xr.baseExperience.featuresManager;
-
       try {
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
@@ -187,13 +183,11 @@ export default {
             this.planeDetected = true;
           }
         });
-
         xrPlanes.onPlaneUpdatedObservable.add(plane => {
           if (this.planeDetected && plane.mesh) {
             this.updateModelPosition(plane);
           }
         });
-
         xrPlanes.onPlaneRemovedObservable.add(plane => {
           if (plane && plane.mesh) {
             plane.mesh.dispose();
