@@ -182,6 +182,7 @@ export default {
       const logDiv = document.getElementById("log");
       logDiv.innerHTML += message + "<br>";
     },
+
     async loadModel(scene, position) {
       await SceneLoader.ImportMesh(
         "",
@@ -206,6 +207,7 @@ export default {
         }
       );
     },
+
     async setupXR(scene) {
       try {
         const xr = await scene.createDefaultXRExperienceAsync({
@@ -221,6 +223,11 @@ export default {
 
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
         console.log("Plane detector feature:", xrPlanes);
+
+        if (!xrPlanes) {
+          console.error("Failed to enable plane detection.");
+          return;
+        }
 
         xrPlanes.onPlaneAddedObservable.add(async (plane) => {
           console.log("Plane added:", plane);
@@ -254,6 +261,7 @@ export default {
           }
         });
       } catch (error) {
+        console.error("WebXR Plane Detector not supported:", error);
         this.logMessage("WebXR Plane Detector not supported: " + error);
       }
     },
