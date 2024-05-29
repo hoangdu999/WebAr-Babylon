@@ -166,11 +166,19 @@ export default {
           VideoTexture.CreateFromWebCam(
             scene,
             function (videoTexture) {
+              const videoTrack = stream.getVideoTracks()[0];
+              const settings = videoTrack.getSettings();
+              const aspectRatio = settings.width / settings.height;
+
+              // Cập nhật tỷ lệ khung hình của videoTexture
               videoTexture.uScale = 1.0;
               videoTexture.vScale = -1.0;
+              videoTexture.uOffset = 0.5 * (1 - aspectRatio);
+              videoTexture.vOffset = 0.5 * (1 - 1 / aspectRatio);
+
               layer.texture = videoTexture;
             },
-            { maxWidth: 1920, maxHeight: 1080, facingMode: "environment" }
+            { facingMode: "environment" }
           );
         })
         .catch((err) => {
