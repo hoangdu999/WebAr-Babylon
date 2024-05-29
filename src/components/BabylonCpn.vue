@@ -1,6 +1,10 @@
 <template>
   <div>
-    <canvas id="renderCanvas" touch-action="none" style="width: 100%; height: 100%;"></canvas>
+    <canvas
+      id="renderCanvas"
+      touch-action="none"
+      style="width: 100%; height: 100%"
+    ></canvas>
     <div id="log"></div>
   </div>
 </template>
@@ -18,10 +22,13 @@ import {
   DirectionalLight,
   MeshBuilder,
   WebXRPlaneDetector,
+  Matrix,
+  Vector2,
+  PolygonMeshBuilder
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
-import { ShadowOnlyMaterial } from '@babylonjs/materials';
+import { ShadowOnlyMaterial } from "@babylonjs/materials";
 
 export default {
   name: "BabylonCpn",
@@ -32,9 +39,9 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null,
-      xr: null,
-      planeDetected: false,
-      planes: [],
+      // xr: null,
+      // planeDetected: false,
+      // planes: [],
     };
   },
   mounted() {
@@ -65,7 +72,9 @@ export default {
       // Thiết lập kích thước canvas
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+      this.logMessage(
+        "Canvas width: " + canvas.width + " Canvas height: " + canvas.height
+      );
     },
 
     async createScene(canvas) {
@@ -84,9 +93,9 @@ export default {
       await this.setupXR(scene);
 
       // Tạo mặt đất
-      const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
+      const ground = MeshBuilder.CreatePlane("ground", { size: 2000 }, scene);
       ground.rotation.x = Math.PI / 2;
-      ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
+      ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
       ground.receiveShadows = true;
       ground.position.y = 0;
 
@@ -95,10 +104,14 @@ export default {
 
     addLight(scene) {
       // Xóa ánh sáng mặc định nếu có
-      scene.lights.forEach(light => light.dispose());
+      scene.lights.forEach((light) => light.dispose());
 
       // Tạo ánh sáng mới
-      var light = new DirectionalLight("dirLight", new Vector3(-2, -3, 1), scene);
+      var light = new DirectionalLight(
+        "dirLight",
+        new Vector3(-2, -3, 1),
+        scene
+      );
       light.position = new Vector3(6, 9, 3);
 
       // Tạo Shadow Generator
@@ -113,12 +126,22 @@ export default {
       const beta = 1.2023107691067825; // Góc quay quanh trục X (đảm bảo mô hình lật ngược lên)
       const radius = 10; // Khoảng cách từ camera đến mục tiêu
 
-      const camera = new ArcRotateCamera('mainCam', alpha, beta, radius, new Vector3(0, 1, 0), scene, true);
+      const camera = new ArcRotateCamera(
+        "mainCam",
+        alpha,
+        beta,
+        radius,
+        new Vector3(0, 1, 0),
+        scene,
+        true
+      );
       camera.attachControl(scene.getEngine().getRenderingCanvas(), true);
 
       // Thêm sự kiện để in giá trị alpha, beta, radius khi camera thay đổi
       camera.onViewMatrixChangedObservable.add(() => {
-        console.log(`Alpha: ${camera.alpha}, Beta: ${camera.beta}, Radius: ${camera.radius}`);
+        console.log(
+          `Alpha: ${camera.alpha}, Beta: ${camera.beta}, Radius: ${camera.radius}`
+        );
       });
 
       return camera;
@@ -128,116 +151,102 @@ export default {
       var layer = new Layer("background", null, scene, true);
 
       // Yêu cầu quyền truy cập camera và micro
-      navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: {
-          facingMode: { exact: "environment" } // Yêu cầu camera phía sau (rear camera)
-        }
-      })
-      .then((stream) => {
-        // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
-        VideoTexture.CreateFromWebCam(scene, function (videoTexture) {
-          videoTexture.uScale = 1.0;
-          videoTexture.vScale = -1.0;
-          layer.texture = videoTexture;
-        }, {  maxWidth: 1920, maxHeight: 1080 ,facingMode: "environment"});
-      })
-      .catch((err) => {
-        console.error("Error accessing camera and microphone: ", err);
-      });
+      navigator.mediaDevices
+        .getUserMedia({
+          audio: true,
+          video: {
+            facingMode: { exact: "environment" }, // Yêu cầu camera phía sau (rear camera)
+          },
+        })
+        .then((stream) => {
+          // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
+          VideoTexture.CreateFromWebCam(
+            scene,
+            function (videoTexture) {
+              videoTexture.uScale = 1.0;
+              videoTexture.vScale = -1.0;
+              layer.texture = videoTexture;
+            },
+            { maxWidth: 1920, maxHeight: 1080, facingMode: "environment" }
+          );
+        })
+        .catch((err) => {
+          console.error("Error accessing camera and microphone: ", err);
+        });
     },
 
     logMessage(message) {
-      const logDiv = document.getElementById('log');
-      logDiv.innerHTML += message + '<br>';
+      const logDiv = document.getElementById("log");
+      logDiv.innerHTML += message + "<br>";
     },
 
     async loadModel(scene, position) {
-      await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
-        // Đặt vị trí của mô hình nếu cần
-        meshes.forEach((mesh) => {
-          mesh.position = position;
+      await SceneLoader.ImportMesh(
+        "",
+        "/models/yasuo/",
+        "scene.gltf",
+        scene,
+        (meshes) => {
+          // Đặt vị trí của mô hình nếu cần
+          meshes.forEach((mesh) => {
+            mesh.position = position;
 
-          // Thêm các mesh vào Shadow Generator
-          this.shadowGenerator.addShadowCaster(mesh);
-        });
-        this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
-        console.log("Model loaded and placed at position:", position);
-      }, null, (scene, message) => {
-        console.error(message);
-      });
+            // Thêm các mesh vào Shadow Generator
+            this.shadowGenerator.addShadowCaster(mesh);
+          });
+          this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
+          console.log("Model loaded and placed at position:", position);
+        },
+        null,
+        (scene, message) => {
+          console.error(message);
+        }
+      );
     },
 
     async setupXR(scene) {
       const xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
           sessionMode: "immersive-ar",
-          referenceSpaceType: "local-floor"
+          referenceSpaceType: "local-floor",
         },
-        optionalFeatures: []
+        optionalFeatures: true,
       });
 
       const fm = xr.baseExperience.featuresManager;
 
-      try {
-        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+      xrPlanes.onPlaneAddedObservable.add(async (plane) => {
+        plane.polygonDefinition.push(plane.polygonDefinition[0]);
+        var polygon_triangulation = new PolygonMeshBuilder(
+          "name",
+          plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          scene
+        );
+        var polygon = polygon_triangulation.build(false, 0.01);
+        plane.mesh = polygon;
 
-        xrPlanes.onPlaneAddedObservable.add(plane => {
-          if (!this.planeDetected) {
-            this.placeModelAtPlane(scene, plane);
-            this.planeDetected = true;
-          }
-        });
+        let planeMatrix = Matrix.FromArray(
+          plane.transformationMatrix._m
+        );
+        let normal = new Vector3(
+          planeMatrix.m[8],
+          planeMatrix.m[9],
+          planeMatrix.m[10]
+        );
+        normal.normalize();
 
-        xrPlanes.onPlaneUpdatedObservable.add(plane => {
-          if (this.planeDetected && plane.mesh) {
-            this.updateModelPosition(plane);
-          }
-        });
+        if (plane.xrPlane.orientation.match("Horizontal")) {
+          console.log("Horizontal plane");
 
-        xrPlanes.onPlaneRemovedObservable.add(plane => {
-          if (plane && plane.mesh) {
-            plane.mesh.dispose();
-          }
-        });
-
-      } catch (error) {
-        console.error("Feature not supported: ", error);
-      }
-
-      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-        this.planes.forEach(plane => plane.dispose());
-        this.planes = [];
+          let position = plane.mesh.position;
+          position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
+          await this.loadModel(scene, position);
+        }
       });
-
-      this.xr = xr;
     },
-
-    placeModelAtPlane(scene, plane) {
-      const centerPoint = plane.polygonDefinition.reduce((acc, p) => ({
-        x: acc.x + p.x / plane.polygonDefinition.length,
-        y: acc.y + p.y / plane.polygonDefinition.length
-      }), { x: 0, y: 0 });
-
-      const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
-      console.log("Placing model at:", position);
-      this.loadModel(scene, position);
-    },
-
-    updateModelPosition(plane) {
-      if (this.model) {
-        const centerPoint = plane.polygonDefinition.reduce((acc, p) => ({
-          x: acc.x + p.x / plane.polygonDefinition.length,
-          y: acc.y + p.y / plane.polygonDefinition.length
-        }), { x: 0, y: 0 });
-
-        const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
-        console.log("Updating model position to:", position);
-        this.model.position = position;
-      }
-    }
-  }
-}
+  },
+};
 </script>
 
 <style>
@@ -245,7 +254,7 @@ body {
   margin: 0;
   overflow: hidden;
 }
-canvas{
+canvas {
   width: 100%;
   height: 100%;
 }
