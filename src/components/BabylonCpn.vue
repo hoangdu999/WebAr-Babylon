@@ -215,10 +215,13 @@ export default {
             },
             optionalFeatures: true,
           });
-
+          console.log(xr);
           const fm = xr.baseExperience.featuresManager;
+          console.log(fm);
 
           const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+          console.log(xrPlanes);
+
           xrPlanes.onPlaneAddedObservable.add(async (plane) => {
             plane.polygonDefinition.push(plane.polygonDefinition[0]);
             var polygon_triangulation = new PolygonMeshBuilder(
@@ -228,6 +231,8 @@ export default {
             );
             var polygon = polygon_triangulation.build(false, 0.01);
             plane.mesh = polygon;
+            console.log(plane.mesh );
+
             let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
             let normal = new Vector3(
               planeMatrix.m[8],
@@ -235,9 +240,7 @@ export default {
               planeMatrix.m[10]
             );
             normal.normalize();
-            let position = plane.mesh.position;
-              position.y += 0.05;
-            await this.loadModel(scene, position); // Sử dụng this.loadModel
+        
             if (plane.xrPlane.orientation.match("Horizontal")) {
               console.log("Horizontal plane");
 
