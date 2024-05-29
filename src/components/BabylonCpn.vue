@@ -17,10 +17,8 @@ import {
   VideoTexture,
   ShadowGenerator,
   DirectionalLight,
-  Color3,
   MeshBuilder,
   WebXRPlaneDetector,
-  WebXRDefaultExperience,
   Animation,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
@@ -35,7 +33,7 @@ export default {
       scene: null,
       camera: null,
       shadowGenerator: null,
-      model: null, // Thêm model vào data
+      model: null,
       xr: null,
       planeDetected: false,
       planes: [], 
@@ -65,12 +63,11 @@ export default {
       window.addEventListener("resize", () => {
         this.engine.resize();
       });
-      // Thêm xử lý chạm
-      //this.setupTouchHandlers(canvas);
-      
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
+
+      // Thiết lập kích thước canvas
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      this.logMessage('Canvas width: ' + canvas.width + ' Canvas height: ' + canvas.height);
     },
 
     async createScene(canvas) {
@@ -86,8 +83,8 @@ export default {
       this.addVideoLayer(scene, canvas);
 
       // Thiết lập AR
-      // await this.setupXR(scene);
       await this.setupXR(scene);
+
       // Tạo mặt đất
       const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
       ground.rotation.x = Math.PI / 2;
@@ -130,7 +127,6 @@ export default {
     },
 
     addVideoLayer(scene, canvas) {
-      
       var layer = new Layer("background", null, scene, true);
 
       // Yêu cầu quyền truy cập camera và micro
@@ -146,18 +142,19 @@ export default {
           videoTexture.uScale = 1.0;
           videoTexture.vScale = -1.0;
           layer.texture = videoTexture;
-        
         }, {  maxWidth: 1920, maxHeight: 1080 ,facingMode: "environment"});
       })
       .catch((err) => {
         console.error("Error accessing camera and microphone: ", err);
       });
     },
+
     logMessage(message) {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
     },
-    async loadModel(scene,position) {
+
+    async loadModel(scene, position) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
         meshes.forEach((mesh) => {
@@ -171,35 +168,43 @@ export default {
         console.error(message);
       });
     },
+
     async setupXR(scene) {
       const xr = await scene.createDefaultXRExperienceAsync({
-      uiOptions: {
-        sessionMode: "immersive-ar",
-        referenceSpaceType: "local-floor"
-      },
-      optionalFeatures: true
+        uiOptions: {
+          sessionMode: "immersive-ar",
+          referenceSpaceType: "local-floor"
+        },
+        optionalFeatures: []
       });
+
       const fm = xr.baseExperience.featuresManager;
-      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
-      xrPlanes.onPlaneAddedObservable.add(plane => {
-        if (!this.planeDetected) {
-          this.placeModelAtPlane(scene, plane);
-          this.planeDetected = true;
-        }
-      });
+      try {
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
-      xrPlanes.onPlaneUpdatedObservable.add(plane => {
-        if (this.planeDetected && plane.mesh) {
-          this.updateModelPosition(plane);
-        }
-      });
+        xrPlanes.onPlaneAddedObservable.add(plane => {
+          if (!this.planeDetected) {
+            this.placeModelAtPlane(scene, plane);
+            this.planeDetected = true;
+          }
+        });
 
-      xrPlanes.onPlaneRemovedObservable.add(plane => {
-        if (plane && plane.mesh) {
-          plane.mesh.dispose();
-        }
-      });
+        xrPlanes.onPlaneUpdatedObservable.add(plane => {
+          if (this.planeDetected && plane.mesh) {
+            this.updateModelPosition(plane);
+          }
+        });
+
+        xrPlanes.onPlaneRemovedObservable.add(plane => {
+          if (plane && plane.mesh) {
+            plane.mesh.dispose();
+          }
+        });
+
+      } catch (error) {
+        console.error("Feature not supported: ", error);
+      }
 
       xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
         this.planes.forEach(plane => plane.dispose());
@@ -208,8 +213,8 @@ export default {
 
       this.xr = xr;
     },
+
     placeModelAtPlane(scene, plane) {
-    // Định vị mô hình tại vị trí trung tâm của mặt phẳng
       const centerPoint = plane.polygonDefinition.reduce((acc, p) => ({
         x: acc.x + p.x / plane.polygonDefinition.length,
         y: acc.y + p.y / plane.polygonDefinition.length
@@ -217,7 +222,7 @@ export default {
 
       const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
       this.loadModel(scene, position);
-   },
+    },
 
     updateModelPosition(plane) {
       if (this.model) {
