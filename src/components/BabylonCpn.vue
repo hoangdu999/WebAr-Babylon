@@ -153,13 +153,11 @@ export default {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
     },
-
     async loadModel(scene, position) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
         meshes.forEach((mesh) => {
           mesh.position = position;
-
           // Thêm các mesh vào Shadow Generator
           this.shadowGenerator.addShadowCaster(mesh);
         });
