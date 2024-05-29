@@ -235,7 +235,9 @@ export default {
               planeMatrix.m[10]
             );
             normal.normalize();
-
+            let position = plane.mesh.position;
+              position.y += 0.05;
+            await this.loadModel(scene, position); // Sử dụng this.loadModel
             if (plane.xrPlane.orientation.match("Horizontal")) {
               console.log("Horizontal plane");
 
