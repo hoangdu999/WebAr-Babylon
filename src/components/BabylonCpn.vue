@@ -27,7 +27,7 @@ import {
   PolygonMeshBuilder,
   StandardMaterial,
   Color3,
-  Quaternion
+  Quaternion,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -210,7 +210,7 @@ export default {
 
     async setupXR(scene) {
       try {
-        const xr = await scene.createDefaultXRExperienceAsync({
+        var xr = await scene.createDefaultXRExperienceAsync({
           uiOptions: {
             sessionMode: "immersive-ar",
             referenceSpaceType: "local-floor",
@@ -227,41 +227,50 @@ export default {
         if (!xrPlanes) {
           console.error("Failed to enable plane detection.");
           return;
-        }else{
-          console.log(xrPlanes);
         }
-        
-        xrPlanes.onPlaneAddedObservable.add(async (plane) => {
-          console.log("Plane added:", plane);
+        xrPlanes.onPlaneAddedObservable.add(
+          (WebXRPlane) => {
+            console.log("PlaneAdded");
+            // plane.polygonDefinition.push(plane.polygonDefinition[0]);
+            // var polygon_triangulation = new PolygonMeshBuilder(
+            //   "name",
+            //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            //   scene
+            // );
+            // var polygon = polygon_triangulation.build(false, 0.01);
+            // plane.mesh = polygon;
+            // console.log("Plane mesh created:", plane.mesh);
 
-          plane.polygonDefinition.push(plane.polygonDefinition[0]);
-          var polygon_triangulation = new PolygonMeshBuilder(
-            "name",
-            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-            scene
-          );
-          var polygon = polygon_triangulation.build(false, 0.01);
-          plane.mesh = polygon;
-          console.log("Plane mesh created:", plane.mesh);
+            // let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
+            // let normal = new Vector3(
+            //   planeMatrix.m[8],
+            //   planeMatrix.m[9],
+            //   planeMatrix.m[10]
+            // );
+            // normal.normalize();
+            // console.log("Plane orientation:", plane.xrPlane.orientation);
 
-          let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
-          let normal = new Vector3(
-            planeMatrix.m[8],
-            planeMatrix.m[9],
-            planeMatrix.m[10]
-          );
-          normal.normalize();
-          console.log("Plane orientation:", plane.xrPlane.orientation);
-        
-          if (plane.xrPlane.orientation.match("Horizontal")) {
-            console.log("Horizontal plane detected");
+            // if (plane.xrPlane.orientation.match("Horizontal")) {
+            //   console.log("Horizontal plane detected");
 
-            let position = plane.mesh.position;
-            position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
-            console.log("Position for model:", position);
-            await this.loadModel(scene, position); // Sử dụng this.loadModel
-          }
-        });
+            //   let position = plane.mesh.position;
+            //   position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
+            //   console.log("Position for model:", position);
+            //   await this.loadModel(scene, position); // Sử dụng this.loadModel
+            // }
+          },
+          xrPlanes.onPlaneUpdatedObservable.add((plane) => {
+            console.log("PlaneUpdated");
+          }),
+
+          xrPlanes.onPlaneRemovedObservable.add((plane) => {
+            console.log("PlaneRemoved");
+          }),
+
+          xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+            console.log("XRSessionInit");
+          })
+        );
       } catch (error) {
         console.error("WebXR Plane Detector not supported:", error);
         this.logMessage("WebXR Plane Detector not supported: " + error);
