@@ -24,7 +24,15 @@ import {
   WebXRPlaneDetector,
   Matrix,
   Vector2,
-  PolygonMeshBuilder
+  PolygonMeshBuilder,
+  Color3,
+  Quaternion,
+  AnimationPropertiesOverride,
+  StandardMaterial,
+  WebXRState,
+  WebXRHitTest,
+  WebXRAnchorSystem,
+  WebXRBackgroundRemover
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -205,52 +213,190 @@ export default {
     },
 
     async setupXR(scene) {
-      try {
-        // Kiểm tra xem thiết bị và trình duyệt có hỗ trợ WebXR Plane Detector
-        
-          const xr = await scene.createDefaultXRExperienceAsync({
-            uiOptions: {
-              sessionMode: "immersive-ar",
-              referenceSpaceType: "local-floor",
-            },
-            optionalFeatures: true,
-          });
+      var dirLight = new DirectionalLight('light', new Vector3(0, -1, -0.5), scene);
+       dirLight.position = new Vector3(0, 5, -5);
+      var shadowGenerator = new ShadowGenerator(1024, dirLight);
+      shadowGenerator.useBlurExponentialShadowMap = true;
+      shadowGenerator.blurKernel = 32;
+      var xr = await scene.createDefaultXRExperienceAsync({
+        uiOptions: {
+          sessionMode: "immersive-ar",
+          referenceSpaceType: "local-floor",
+        },
+        optionalFeatures: true,
+      });
 
-          const fm = xr.baseExperience.featuresManager;
+      const fm = xr.baseExperience.featuresManager;
 
-          const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-          xrPlanes.onPlaneAddedObservable.add(async (plane) => {
-            plane.polygonDefinition.push(plane.polygonDefinition[0]);
-            var polygon_triangulation = new PolygonMeshBuilder(
-              "name",
-              plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-              scene
-            );
-            var polygon = polygon_triangulation.build(false, 0.01);
-            plane.mesh = polygon;
+      const xrTest = fm.enableFeature(WebXRHitTest.Name, "latest");
+      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+      const anchors = fm.enableFeature(WebXRAnchorSystem.Name, "latest");
 
-            let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
-            let normal = new Vector3(
-              planeMatrix.m[8],
-              planeMatrix.m[9],
-              planeMatrix.m[10]
-            );
-            normal.normalize();
+      const xrBackgroundRemover = fm.enableFeature(WebXRBackgroundRemover.Name);
+      const model = await SceneLoader.ImportMeshAsync( "",
+        "/models/yasuo/",
+        "scene.gltf", scene);
+      let b = model.meshes[0]; //BABYLON.CylinderBuilder.CreateCylinder('cylinder', { diameterBottom: 0.2, diameterTop: 0.4, height: 0.5 });
+      b.rotationQuaternion = new Quaternion();
+      // b.isVisible = false;
+      shadowGenerator.addShadowCaster(b, true);
 
-            if (plane.xrPlane.orientation.match("Horizontal")) {
-              console.log("Horizontal plane");
+      const marker = MeshBuilder.CreateTorus("marker", {
+        diameter: 0.15,
+        thickness: 0.05,
+      });
+      marker.isVisible = false;
+      marker.rotationQuaternion = new Quaternion();
 
-              let position = plane.mesh.position;
-              position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
-              await this.loadModel(scene, position); // Sử dụng this.loadModel
-            }
-          });
-        
-      } catch (error) {
-        this.logMessage(
-          "WebXR Plane Detector not supported" + error
-      );
+      var skeleton = model.skeletons[0];
+
+      // ROBOT
+      skeleton.animationPropertiesOverride =
+        new AnimationPropertiesOverride();
+      skeleton.animationPropertiesOverride.enableBlending = true;
+      skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
+      skeleton.animationPropertiesOverride.loopMode = 1;
+
+      var idleRange = skeleton.getAnimationRange("YBot_Idle");
+      var walkRange = skeleton.getAnimationRange("YBot_Walk");
+      var runRange = skeleton.getAnimationRange("YBot_Run");
+      var leftRange = skeleton.getAnimationRange("YBot_LeftStrafeWalk");
+      var rightRange = skeleton.getAnimationRange("YBot_RightStrafeWalk");
+      scene.beginAnimation(skeleton, idleRange.from, idleRange.to, true);
+
+      let hitTest;
+
+      b.isVisible = false;
+
+      xrTest.onHitTestResultObservable.add((results) => {
+        if (results.length) {
+          marker.isVisible = true;
+          hitTest = results[0];
+          hitTest.transformationMatrix.decompose(
+            undefined,
+            b.rotationQuaternion,
+            b.position
+          );
+          hitTest.transformationMatrix.decompose(
+            undefined,
+            marker.rotationQuaternion,
+            marker.position
+          );
+        } else {
+          marker.isVisible = false;
+          hitTest = undefined;
+        }
+      });
+      const mat1 = new StandardMaterial("1", scene);
+      mat1.diffuseColor = Color3.Red();
+      const mat2 = new StandardMaterial("1", scene);
+      mat2.diffuseColor = Color3.Blue();
+
+      if (anchors) {
+        console.log("anchors attached");
+        anchors.onAnchorAddedObservable.add((anchor) => {
+          console.log("attaching", anchor);
+          b.isVisible = true;
+          anchor.attachedNode = b.clone("mensch");
+          anchor.attachedNode.skeleton = skeleton.clone("skelet");
+          shadowGenerator.addShadowCaster(anchor.attachedNode, true);
+          scene.beginAnimation(
+            anchor.attachedNode.skeleton,
+            idleRange.from,
+            idleRange.to,
+            true
+          );
+          b.isVisible = false;
+        });
+
+        anchors.onAnchorRemovedObservable.add((anchor) => {
+          console.log("disposing", anchor);
+          if (anchor) {
+            anchor.attachedNode.isVisible = false;
+            anchor.attachedNode.dispose();
+          }
+        });
       }
+
+      scene.onPointerDown = (evt, pickInfo) => {
+        if (
+          hitTest &&
+          anchors &&
+          xr.baseExperience.state === WebXRState.IN_XR
+        ) {
+          anchors.addAnchorPointUsingHitTestResultAsync(hitTest);
+        }
+      };
+
+      const planes = [];
+
+      xrPlanes.onPlaneAddedObservable.add((plane) => {
+        plane.polygonDefinition.push(plane.polygonDefinition[0]);
+        var polygon_triangulation = new PolygonMeshBuilder(
+          "name",
+          plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          scene
+        );
+        var polygon = polygon_triangulation.build(false, 0.01);
+        plane.mesh = polygon; //BABYLON.TubeBuilder.CreateTube("tube", { path: plane.polygonDefinition, radius: 0.02, sideOrientation: BABYLON.Mesh.FRONTSIDE, updatable: true }, scene);
+        //}
+        planes[plane.id] = plane.mesh;
+        const mat = new StandardMaterial("mat", scene);
+        mat.alpha = 0.5;
+        mat.diffuseColor = Color3.Random();
+        polygon.createNormals();
+        // polygon.receiveShadows = true;
+        plane.mesh.material = mat;
+
+        plane.mesh.rotationQuaternion = new Quaternion();
+        plane.transformationMatrix.decompose(
+          plane.mesh.scaling,
+          plane.mesh.rotationQuaternion,
+          plane.mesh.position
+        );
+      });
+
+      xrPlanes.onPlaneUpdatedObservable.add((plane) => {
+        let mat;
+        if (plane.mesh) {
+          mat = plane.mesh.material;
+          plane.mesh.dispose(false, false);
+        }
+        const some = plane.polygonDefinition.some((p) => !p);
+        if (some) {
+          return;
+        }
+        plane.polygonDefinition.push(plane.polygonDefinition[0]);
+        var polygon_triangulation = new PolygonMeshBuilder(
+          "name",
+          plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          scene
+        );
+        var polygon = polygon_triangulation.build(false, 0.01);
+        polygon.createNormals();
+        plane.mesh = polygon; // BABYLON.TubeBuilder.CreateTube("tube", { path: plane.polygonDefinition, radius: 0.02, sideOrientation: BABYLON.Mesh.FRONTSIDE, updatable: true }, scene);
+        //}
+        planes[plane.id] = plane.mesh;
+        plane.mesh.material = mat;
+        plane.mesh.rotationQuaternion = new Quaternion();
+        plane.transformationMatrix.decompose(
+          plane.mesh.scaling,
+          plane.mesh.rotationQuaternion,
+          plane.mesh.position
+        );
+        plane.mesh.receiveShadows = true;
+      });
+
+      xrPlanes.onPlaneRemovedObservable.add((plane) => {
+        if (plane && planes[plane.id]) {
+          planes[plane.id].dispose();
+        }
+      });
+
+      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+        planes.forEach((plane) => plane.dispose());
+        planes.length = 0;
+      });
     },
   },
 };
