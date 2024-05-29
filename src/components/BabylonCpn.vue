@@ -152,7 +152,6 @@ export default {
 
     addVideoLayer(scene, canvas) {
       var layer = new Layer("background", null, scene, true);
-
       // Yêu cầu quyền truy cập camera và micro
       navigator.mediaDevices
         .getUserMedia({
@@ -162,23 +161,16 @@ export default {
           },
         })
         .then((stream) => {
-          var video = document.createElement('video');
-      video.srcObject = stream;
-      video.play();
-
-      // Tạo VideoTexture từ video element
-      var videoTexture = new VideoTexture("video", video, scene, true, true);
-
-      videoTexture.uScale = 1.0;
-      videoTexture.vScale = -1.0;
-      layer.texture = videoTexture;
-
-      // Đảm bảo tỷ lệ khung hình chính xác
-      video.addEventListener('loadedmetadata', function() {
-        var aspectRatio = video.videoWidth / video.videoHeight;
-        videoTexture.uOffset = 0.5 * (1 - aspectRatio);
-        videoTexture.vOffset = 0.5 * (1 - 1 / aspectRatio);
-      });
+          // Tạo VideoTexture từ webcam với kích thước dựa trên kích thước của cửa sổ trình duyệt
+          VideoTexture.CreateFromWebCam(
+            scene,
+            function (videoTexture) {
+              videoTexture.uScale = 1.0;
+              videoTexture.vScale = -1.0;
+              layer.texture = videoTexture;
+            },
+            {facingMode: "environment" }
+          );
         })
         .catch((err) => {
           console.error("Error accessing camera and microphone: ", err);
