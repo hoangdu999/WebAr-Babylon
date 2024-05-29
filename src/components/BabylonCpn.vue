@@ -205,22 +205,21 @@ export default {
     },
 
     async setupXR(scene) {
-      const xr = await scene.createDefaultXRExperienceAsync({
-        uiOptions: {
-          sessionMode: "immersive-ar",
-          referenceSpaceType: "local-floor",
-        },
-        optionalFeatures: true,
-      });
-
-      const fm = xr.baseExperience.featuresManager;
-
-      // Kiểm tra và kích hoạt tính năng phát hiện mặt phẳng
       try {
         // Kiểm tra xem thiết bị và trình duyệt có hỗ trợ WebXR Plane Detector
         const isPlaneDetectorSupported = await navigator.xr.isSessionSupported('immersive-ar');
 
         if (isPlaneDetectorSupported) {
+          const xr = await scene.createDefaultXRExperienceAsync({
+            uiOptions: {
+              sessionMode: "immersive-ar",
+              referenceSpaceType: "local-floor",
+            },
+            optionalFeatures: true,
+          });
+
+          const fm = xr.baseExperience.featuresManager;
+
           const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
           xrPlanes.onPlaneAddedObservable.add(async (plane) => {
             plane.polygonDefinition.push(plane.polygonDefinition[0]);
