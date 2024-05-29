@@ -222,55 +222,59 @@ export default {
         console.log("Features manager:", fm);
 
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-        console.log("Plane detector feature:", xrPlanes);
-
         if (!xrPlanes) {
           console.error("Failed to enable plane detection.");
+          this.logMessage("Failed to enable plane detection.");
           return;
         }
-        xrPlanes.onPlaneAddedObservable.add(
-          (WebXRPlane) => {
-            console.log("PlaneAdded");
-            // plane.polygonDefinition.push(plane.polygonDefinition[0]);
-            // var polygon_triangulation = new PolygonMeshBuilder(
-            //   "name",
-            //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-            //   scene
-            // );
-            // var polygon = polygon_triangulation.build(false, 0.01);
-            // plane.mesh = polygon;
-            // console.log("Plane mesh created:", plane.mesh);
 
-            // let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
-            // let normal = new Vector3(
-            //   planeMatrix.m[8],
-            //   planeMatrix.m[9],
-            //   planeMatrix.m[10]
-            // );
-            // normal.normalize();
-            // console.log("Plane orientation:", plane.xrPlane.orientation);
+        xrPlanes.onPlaneAddedObservable.add(async (plane) => {
+          console.log("Plane added:", plane);
+          this.logMessage("Plane added: " + JSON.stringify(plane));
 
-            // if (plane.xrPlane.orientation.match("Horizontal")) {
-            //   console.log("Horizontal plane detected");
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          var polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          var polygon = polygon_triangulation.build(false, 0.01);
+          plane.mesh = polygon;
+          console.log("Plane mesh created:", plane.mesh);
 
-            //   let position = plane.mesh.position;
-            //   position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
-            //   console.log("Position for model:", position);
-            //   await this.loadModel(scene, position); // Sử dụng this.loadModel
-            // }
-          },
-          xrPlanes.onPlaneUpdatedObservable.add((plane) => {
-            console.log("PlaneUpdated");
-          }),
+          let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
+          let normal = new Vector3(
+            planeMatrix.m[8],
+            planeMatrix.m[9],
+            planeMatrix.m[10]
+          );
+          normal.normalize();
+          console.log("Plane orientation:", plane.xrPlane.orientation);
 
-          xrPlanes.onPlaneRemovedObservable.add((plane) => {
-            console.log("PlaneRemoved");
-          }),
+          if (plane.xrPlane.orientation.match("Horizontal")) {
+            console.log("Horizontal plane detected");
 
-          xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-            console.log("XRSessionInit");
-          })
-        );
+            let position = plane.mesh.position;
+            position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
+            console.log("Position for model:", position);
+            await this.loadModel(scene, position); // Sử dụng this.loadModel
+          }
+        });
+
+        xrPlanes.onPlaneUpdatedObservable.add((plane) => {
+          console.log("Plane updated:", plane);
+          this.logMessage("Plane updated: " + JSON.stringify(plane));
+        });
+
+        xrPlanes.onPlaneRemovedObservable.add((plane) => {
+          console.log("Plane removed:", plane);
+          this.logMessage("Plane removed: " + JSON.stringify(plane));
+        });
+
+        xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+          console.log("XR Session Initialized");
+          this.logMessage("XR Session Initialized");
+        });
       } catch (error) {
         console.error("WebXR Plane Detector not supported:", error);
         this.logMessage("WebXR Plane Detector not supported: " + error);
