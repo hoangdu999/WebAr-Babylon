@@ -24,7 +24,10 @@ import {
   WebXRPlaneDetector,
   Matrix,
   Vector2,
-  PolygonMeshBuilder
+  PolygonMeshBuilder,
+  StandardMaterial,
+  Color3,
+  Quaternion
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -190,6 +193,7 @@ export default {
           // Đặt vị trí của mô hình nếu cần
           meshes.forEach((mesh) => {
             mesh.position = position;
+            console.log("Mesh position set to:", position);
 
             // Thêm các mesh vào Shadow Generator
             this.shadowGenerator.addShadowCaster(mesh);
@@ -199,60 +203,60 @@ export default {
         },
         null,
         (scene, message) => {
-          console.error(message);
+          console.error("Error loading model:", message);
         }
       );
     },
 
     async setupXR(scene) {
-        try {
-        // Kiểm tra xem thiết bị và trình duyệt có hỗ trợ WebXR Plane Detector
+      try {
+        const xr = await scene.createDefaultXRExperienceAsync({
+          uiOptions: {
+            sessionMode: "immersive-ar",
+            referenceSpaceType: "local-floor",
+          },
+          optionalFeatures: true,
+        });
+        console.log("XR experience created:", xr);
+        const fm = xr.baseExperience.featuresManager;
+        console.log("Features manager:", fm);
+
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+        console.log("Plane detector feature:", xrPlanes);
+
+        xrPlanes.onPlaneAddedObservable.add(async (plane) => {
+          console.log("Plane added:", plane);
+
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          var polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          var polygon = polygon_triangulation.build(false, 0.01);
+          plane.mesh = polygon;
+          console.log("Plane mesh created:", plane.mesh);
+
+          let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
+          let normal = new Vector3(
+            planeMatrix.m[8],
+            planeMatrix.m[9],
+            planeMatrix.m[10]
+          );
+          normal.normalize();
+          console.log("Plane orientation:", plane.xrPlane.orientation);
         
-          const xr = await scene.createDefaultXRExperienceAsync({
-            uiOptions: {
-              sessionMode: "immersive-ar",
-              referenceSpaceType: "local-floor",
-            },
-            optionalFeatures: true,
-          });
-          console.log(xr);
-          const fm = xr.baseExperience.featuresManager;
-          console.log(fm);
+          if (plane.xrPlane.orientation.match("Horizontal")) {
+            console.log("Horizontal plane detected");
 
-          const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-          console.log(xrPlanes);
-
-          xrPlanes.onPlaneAddedObservable.add(async (plane) => {
-            plane.polygonDefinition.push(plane.polygonDefinition[0]);
-            var polygon_triangulation = new PolygonMeshBuilder(
-              "name",
-              plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-              scene
-            );
-            var polygon = polygon_triangulation.build(false, 0.01);
-            plane.mesh = polygon;
-            console.log(plane.mesh );
-
-            let planeMatrix = Matrix.FromArray(plane.transformationMatrix._m);
-            let normal = new Vector3(
-              planeMatrix.m[8],
-              planeMatrix.m[9],
-              planeMatrix.m[10]
-            );
-            normal.normalize();
-        
-            if (plane.xrPlane.orientation.match("Horizontal")) {
-              console.log("Horizontal plane");
-
-              let position = plane.mesh.position;
-              position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
-              await this.loadModel(scene, position); // Sử dụng this.loadModel
-            }
-          });
+            let position = plane.mesh.position;
+            position.y += 0.05; // Đặt mô hình cao hơn một chút so với mặt phẳng
+            console.log("Position for model:", position);
+            await this.loadModel(scene, position); // Sử dụng this.loadModel
+          }
+        });
       } catch (error) {
-        this.logMessage(
-          "WebXR Plane Detector not supported" + error
-      );
+        this.logMessage("WebXR Plane Detector not supported: " + error);
       }
     },
   },
