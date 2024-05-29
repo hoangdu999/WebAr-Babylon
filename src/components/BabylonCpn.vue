@@ -182,7 +182,6 @@ export default {
       const logDiv = document.getElementById("log");
       logDiv.innerHTML += message + "<br>";
     },
-
     async loadModel(scene, position) {
       await SceneLoader.ImportMesh(
         "",
@@ -207,7 +206,6 @@ export default {
         }
       );
     },
-
     async setupXR(scene) {
       try {
         const xr = await scene.createDefaultXRExperienceAsync({
