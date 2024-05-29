@@ -13,13 +13,11 @@ import {
   Vector3,
   Layer,
   SceneLoader,
-  HemisphericLight,
   VideoTexture,
   ShadowGenerator,
   DirectionalLight,
   MeshBuilder,
   WebXRPlaneDetector,
-  Animation,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -36,7 +34,7 @@ export default {
       model: null,
       xr: null,
       planeDetected: false,
-      planes: [], 
+      planes: [],
     };
   },
   mounted() {
@@ -148,23 +146,28 @@ export default {
         console.error("Error accessing camera and microphone: ", err);
       });
     },
+
     logMessage(message) {
       const logDiv = document.getElementById('log');
       logDiv.innerHTML += message + '<br>';
     },
+
     async loadModel(scene, position) {
       await SceneLoader.ImportMesh("", "/models/yasuo/", "scene.gltf", scene, (meshes) => {
         // Đặt vị trí của mô hình nếu cần
         meshes.forEach((mesh) => {
           mesh.position = position;
+
           // Thêm các mesh vào Shadow Generator
           this.shadowGenerator.addShadowCaster(mesh);
         });
         this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
+        console.log("Model loaded and placed at position:", position);
       }, null, (scene, message) => {
         console.error(message);
       });
     },
+
     async setupXR(scene) {
       const xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
@@ -173,7 +176,9 @@ export default {
         },
         optionalFeatures: []
       });
+
       const fm = xr.baseExperience.featuresManager;
+
       try {
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
@@ -183,11 +188,13 @@ export default {
             this.planeDetected = true;
           }
         });
+
         xrPlanes.onPlaneUpdatedObservable.add(plane => {
           if (this.planeDetected && plane.mesh) {
             this.updateModelPosition(plane);
           }
         });
+
         xrPlanes.onPlaneRemovedObservable.add(plane => {
           if (plane && plane.mesh) {
             plane.mesh.dispose();
@@ -213,6 +220,7 @@ export default {
       }), { x: 0, y: 0 });
 
       const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
+      console.log("Placing model at:", position);
       this.loadModel(scene, position);
     },
 
@@ -224,6 +232,7 @@ export default {
         }), { x: 0, y: 0 });
 
         const position = new Vector3(centerPoint.x, plane.polygonDefinition[0].y, centerPoint.y);
+        console.log("Updating model position to:", position);
         this.model.position = position;
       }
     }
