@@ -227,8 +227,10 @@ export default {
         if (!xrPlanes) {
           console.error("Failed to enable plane detection.");
           return;
+        }else{
+          console.log(xrPlanes);
         }
-
+        
         xrPlanes.onPlaneAddedObservable.add(async (plane) => {
           console.log("Plane added:", plane);
 
