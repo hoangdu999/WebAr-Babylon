@@ -227,7 +227,10 @@ export default {
           this.logMessage("Failed to enable plane detection.");
           return;
         }
-
+        setInterval(() => {
+      console.log("Checking for detected planes:", xrPlanes.planes);
+      this.logMessage("Checking for detected planes: " + JSON.stringify(xrPlanes.planes));
+    }, 5000);
         xrPlanes.onPlaneAddedObservable.add(async (plane) => {
           console.log("Plane added:", plane);
           this.logMessage("Plane added: " + JSON.stringify(plane));
