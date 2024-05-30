@@ -42,8 +42,8 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null,
-      xr: null,
-      planeDetected: false,
+      // xr: null,
+      // planeDetected: false,
       planes: [],
     };
   },
@@ -209,8 +209,6 @@ export default {
           "latest"
         );
 
-        const planes = [];
-
         xrPlanes.onPlaneAddedObservable.add((plane) => {
           plane.polygonDefinition.push(plane.polygonDefinition[0]);
           var polygon_triangulation = new PolygonMeshBuilder(
@@ -220,7 +218,7 @@ export default {
           );
           var polygon = polygon_triangulation.build(false, 0.01);
           plane.mesh = polygon;
-          planes[plane.id] = plane.mesh;
+          this.planes[plane.id] = plane.mesh;
           const mat = new StandardMaterial("mat", scene);
           mat.alpha = 0.5;
           // pick a random color
@@ -256,7 +254,7 @@ export default {
           var polygon = polygon_triangulation.build(false, 0.01);
           polygon.createNormals();
           plane.mesh = polygon;
-          planes[plane.id] = plane.mesh;
+          this.planes[plane.id] = plane.mesh;
           plane.mesh.material = mat;
           plane.mesh.rotationQuaternion = new Quaternion();
           plane.transformationMatrix.decompose(
@@ -267,14 +265,14 @@ export default {
         });
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
-          if (plane && planes[plane.id]) {
-            planes[plane.id].dispose();
+          if (plane && this.planes[plane.id]) {
+            this.planes[plane.id].dispose();
           }
         });
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          planes.forEach((plane) => plane.dispose());
-          planes.length = 0;
+          this.planes.forEach((plane) => plane.dispose());
+          this.planes.length = 0;
         });
       } catch (error) { 
         console.error("WebXR Plane Detector not supported:", error);
