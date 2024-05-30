@@ -213,13 +213,14 @@ export default {
         });
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
-          if (plane && this.planes[plane.id]) {
-            this.planes[plane.id].dispose();
+          if (plane.mesh) {
+            plane.mesh.dispose();
+            delete this.planes[plane.id];
           }
         });
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          this.planes.forEach((plane) => plane.dispose());
+          Object.values(this.planes).forEach((mesh) => mesh.dispose());
           this.planes = {};
         });
       } catch (e) {
