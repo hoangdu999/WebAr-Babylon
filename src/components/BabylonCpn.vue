@@ -15,14 +15,19 @@ import {
   Scene,
   ArcRotateCamera,
   Vector3,
+  Layer,
+  SceneLoader,
+  VideoTexture,
+  ShadowGenerator,
   DirectionalLight,
+  MeshBuilder,
   WebXRPlaneDetector,
+  Matrix,
   Vector2,
   PolygonMeshBuilder,
   StandardMaterial,
   Color3,
   Quaternion,
-  ShadowGenerator
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -37,6 +42,8 @@ export default {
       camera: null,
       shadowGenerator: null,
       model: null,
+      // xr: null,
+      // planeDetected: false,
       planes: [],
     };
   },
@@ -82,8 +89,17 @@ export default {
       // Thêm camera
       this.camera = this.addCamera(scene, canvas);
 
+      // Thêm video layer
+
       // Thiết lập AR
       await this.setupXR(scene);
+
+      // Tạo mặt đất
+      // const ground = MeshBuilder.CreatePlane("ground", { size: 2000 }, scene);
+      // ground.rotation.x = Math.PI / 2;
+      // ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
+      // ground.receiveShadows = true;
+      // ground.position.y = 0;
 
       return scene;
     },
@@ -107,6 +123,7 @@ export default {
     },
 
     addCamera(scene, canvas) {
+      // Điều chỉnh vị trí và góc quay của camera để có góc nhìn như trong hình
       const camera = new ArcRotateCamera(
         "Camera",
         -Math.PI / 2,
@@ -124,66 +141,113 @@ export default {
       logDiv.innerHTML += message + "<br>";
     },
 
-    async setupXR(scene) {
-      const xr = await scene.createDefaultXRExperienceAsync({
-        uiOptions: {
-          sessionMode: "immersive-ar",
-          referenceSpaceType: "local-floor"
+    async loadModel(scene, position) {
+      await SceneLoader.ImportMesh(
+        "",
+        "/models/yasuo/",
+        "scene.gltf",
+        scene,
+        (meshes) => {
+          // Đặt vị trí của mô hình nếu cần
+          meshes.forEach((mesh) => {
+            mesh.position = position;
+            console.log("Mesh position set to:", position);
+
+            // Thêm các mesh vào Shadow Generator
+            this.shadowGenerator.addShadowCaster(mesh);
+          });
+          this.model = meshes[0]; // Giả định mô hình chính là mesh đầu tiên
+          console.log("Model loaded and placed at position:", position);
         },
-        optionalFeatures: true
-      });
-
-      const fm = xr.baseExperience.featuresManager;
-
-      const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-
-      xrPlanes.onPlaneAddedObservable.add(plane => {
-        plane.polygonDefinition.push(plane.polygonDefinition[0]);
-        var polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
-        var polygon = polygon_triangulation.build(false, 0.01);
-        plane.mesh = polygon;
-        this.planes[plane.id] = plane.mesh;
-        const mat = new StandardMaterial("mat", scene);
-        mat.alpha = 0.5;
-        mat.diffuseColor = Color3.Random();
-        polygon.createNormals();
-        plane.mesh.material = mat;
-
-        plane.mesh.rotationQuaternion = new Quaternion();
-        plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
-      });
-
-      xrPlanes.onPlaneUpdatedObservable.add(plane => {
-        let mat;
-        if (plane.mesh) {
-          mat = plane.mesh.material;
-          plane.mesh.dispose(false, false);
+        null,
+        (scene, message) => {
+          console.error("Error loading model:", message);
         }
-        const some = plane.polygonDefinition.some(p => !p);
-        if (some) {
-          return;
-        }
-        plane.polygonDefinition.push(plane.polygonDefinition[0]);
-        var polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
-        var polygon = polygon_triangulation.build(false, 0.01);
-        polygon.createNormals();
-        plane.mesh = polygon;
-        this.planes[plane.id] = plane.mesh;
-        plane.mesh.material = mat;
-        plane.mesh.rotationQuaternion = new Quaternion();
-        plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
-      });
+      );
+    },
 
-      xrPlanes.onPlaneRemovedObservable.add(plane => {
-        if (plane && this.planes[plane.id]) {
-          this.planes[plane.id].dispose();
-        }
-      });
+    async setupXR(scene) {
+      try {
+        var xr = await scene.createDefaultXRExperienceAsync({
+          uiOptions: {
+            sessionMode: "immersive-ar",
+            referenceSpaceType: "local-floor",
+          },
+          optionalFeatures: true,
+        });
 
-      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-        this.planes.forEach(plane => plane.dispose());
-        this.planes.length = 0;
-      });
+        const fm = xr.baseExperience.featuresManager;
+
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+
+        xrPlanes.onPlaneAddedObservable.add((plane) => {
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          const polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          const polygon = polygon_triangulation.build(false, 0.01);
+          plane.mesh = polygon;
+          this.planes[plane.id] = plane.mesh;
+          const mat = new StandardMaterial("mat", scene);
+          mat.alpha = 0.5;
+          // pick a random color
+          mat.diffuseColor = Color3.Random();
+          polygon.createNormals();
+          plane.mesh.material = mat;
+          plane.mesh.rotationQuaternion = new Quaternion();
+          plane.transformationMatrix.decompose(
+            plane.mesh.scaling,
+            plane.mesh.rotationQuaternion,
+            plane.mesh.position
+          );
+        });
+
+        xrPlanes.onPlaneUpdatedObservable.add((plane) => {
+          // let mat;
+          // if (plane.mesh) {
+          //   // keep the material, dispose the old polygon
+          //   mat = plane.mesh.material;
+          //   plane.mesh.dispose(false, false);
+          // }
+          // const some = plane.polygonDefinition.some((p) => !p);
+          // if (some) {
+          //   return;
+          // }
+          // plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          // var polygon_triangulation = new PolygonMeshBuilder(
+          //   "name",
+          //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          //   scene
+          // );
+          // var polygon = polygon_triangulation.build(false, 0.01);
+          // polygon.createNormals();
+          // plane.mesh = polygon;
+          // this.planes[plane.id] = plane.mesh;
+          // plane.mesh.material = mat;
+          // plane.mesh.rotationQuaternion = new Quaternion();
+          // plane.transformationMatrix.decompose(
+          //   plane.mesh.scaling,
+          //   plane.mesh.rotationQuaternion,
+          //   plane.mesh.position
+          // );
+        });
+
+        xrPlanes.onPlaneRemovedObservable.add((plane) => {
+          // if (plane && this.planes[plane.id]) {
+          //   this.planes[plane.id].dispose();
+          // }
+        });
+
+        xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+          // this.planes.forEach((plane) => plane.dispose());
+          // this.planes.length = 0;
+        });
+      } catch (error) {
+        console.error("WebXR Plane Detector not supported:", error);
+        this.logMessage("WebXR Plane Detector not supported: " + error);
+      }
     },
   },
 };
