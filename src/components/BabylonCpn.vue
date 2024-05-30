@@ -32,7 +32,7 @@ import {
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import earcut from 'earcut';
+import earcut from "earcut";
 
 window.earcut = earcut; // Ensure earcut is available globally
 
@@ -159,18 +159,50 @@ export default {
 
         xrPlanes.onPlaneAddedObservable.add((plane) => {
           plane.polygonDefinition.push(plane.polygonDefinition[0]);
-          const polygon_triangulation = new PolygonMeshBuilder(
+          var polygon_triangulation = new PolygonMeshBuilder(
             "name",
             plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
             scene
           );
-          const polygon = polygon_triangulation.build(false, 0.01, earcut);
+          var polygon = polygon_triangulation.build(false, 0.01);
           plane.mesh = polygon;
           this.planes[plane.id] = plane.mesh;
           const mat = new StandardMaterial("mat", scene);
           mat.alpha = 0.5;
+          // pick a random color
           mat.diffuseColor = Color3.Random();
           polygon.createNormals();
+          plane.mesh.material = mat;
+
+          plane.mesh.rotationQuaternion = new Quaternion();
+          plane.transformationMatrix.decompose(
+            plane.mesh.scaling,
+            plane.mesh.rotationQuaternion,
+            plane.mesh.position
+          );
+        });
+
+        xrPlanes.onPlaneUpdatedObservable.add((plane) => {
+          let mat;
+          if (plane.mesh) {
+            // keep the material, dispose the old polygon
+            mat = plane.mesh.material;
+            plane.mesh.dispose(false, false);
+          }
+          const some = plane.polygonDefinition.some((p) => !p);
+          if (some) {
+            return;
+          }
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          var polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          var polygon = polygon_triangulation.build(false, 0.01);
+          polygon.createNormals();
+          plane.mesh = polygon;
+          this.planes[plane.id] = plane.mesh;
           plane.mesh.material = mat;
           plane.mesh.rotationQuaternion = new Quaternion();
           plane.transformationMatrix.decompose(
@@ -181,17 +213,15 @@ export default {
         });
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
-          if (plane.mesh) {
-            plane.mesh.dispose();
-            delete this.planes[plane.id];
+          if (plane && this.planes[plane.id]) {
+            this.planes[plane.id].dispose();
           }
         });
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          Object.values(this.planes).forEach((mesh) => mesh.dispose());
+          this.planes.forEach((plane) => plane.dispose());
           this.planes = {};
         });
-
       } catch (e) {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
