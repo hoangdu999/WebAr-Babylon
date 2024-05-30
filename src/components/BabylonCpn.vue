@@ -181,27 +181,27 @@ export default {
         const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
         xrPlanes.onPlaneAddedObservable.add((plane) => {
-          // plane.polygonDefinition.push(plane.polygonDefinition[0]);
-          // var polygon_triangulation = new PolygonMeshBuilder(
-          //   "name",
-          //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-          //   scene
-          // );
-          // var polygon = polygon_triangulation.build(false, 0.01);
-          // plane.mesh = polygon;
-          // this.planes[plane.id] = plane.mesh;
-          // const mat = new StandardMaterial("mat", scene);
-          // mat.alpha = 0.5;
-          // // pick a random color
-          // mat.diffuseColor = Color3.Random();
-          // polygon.createNormals();
-          // plane.mesh.material = mat;
-          // plane.mesh.rotationQuaternion = new Quaternion();
-          // plane.transformationMatrix.decompose(
-          //   plane.mesh.scaling,
-          //   plane.mesh.rotationQuaternion,
-          //   plane.mesh.position
-          // );
+          plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          var polygon_triangulation = new PolygonMeshBuilder(
+            "name",
+            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+            scene
+          );
+          var polygon = polygon_triangulation.build(false, 0.01);
+          plane.mesh = polygon;
+          this.planes[plane.id] = plane.mesh;
+          const mat = new StandardMaterial("mat", scene);
+          mat.alpha = 0.5;
+          // pick a random color
+          mat.diffuseColor = Color3.Random();
+          polygon.createNormals();
+          plane.mesh.material = mat;
+          plane.mesh.rotationQuaternion = new Quaternion();
+          plane.transformationMatrix.decompose(
+            plane.mesh.scaling,
+            plane.mesh.rotationQuaternion,
+            plane.mesh.position
+          );
         });
 
         xrPlanes.onPlaneUpdatedObservable.add((plane) => {
