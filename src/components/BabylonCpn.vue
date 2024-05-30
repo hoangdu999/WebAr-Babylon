@@ -87,7 +87,7 @@ export default {
       this.addLight(scene);
 
       // Thêm camera
-      this.camera = this.addCamera(scene);
+      this.camera = this.addCamera(scene, canvas);
 
       // Thêm video layer
 
@@ -95,11 +95,11 @@ export default {
       await this.setupXR(scene);
 
       // Tạo mặt đất
-      const ground = MeshBuilder.CreatePlane("ground", { size: 2000 }, scene);
-      ground.rotation.x = Math.PI / 2;
-      ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
-      ground.receiveShadows = true;
-      ground.position.y = 0;
+      // const ground = MeshBuilder.CreatePlane("ground", { size: 2000 }, scene);
+      // ground.rotation.x = Math.PI / 2;
+      // ground.material = new ShadowOnlyMaterial("shadowOnly", scene);
+      // ground.receiveShadows = true;
+      // ground.position.y = 0;
 
       return scene;
     },
@@ -122,33 +122,19 @@ export default {
       this.shadowGenerator.blurKernel = 32;
     },
 
-    addCamera(scene) {
+    addCamera(scene, canvas) {
       // Điều chỉnh vị trí và góc quay của camera để có góc nhìn như trong hình
-      const alpha = 7.349039862224447; // Góc quay quanh trục Y
-      const beta = 1.2023107691067825; // Góc quay quanh trục X (đảm bảo mô hình lật ngược lên)
-      const radius = 10; // Khoảng cách từ camera đến mục tiêu
-
       const camera = new ArcRotateCamera(
-        "mainCam",
-        alpha,
-        beta,
-        radius,
-        new Vector3(0, 1, 0),
-        scene,
-        true
+        "Camera",
+        -Math.PI / 2,
+        Math.PI / 2,
+        12,
+        Vector3.Zero(),
+        scene
       );
-      camera.attachControl(scene.getEngine().getRenderingCanvas(), true);
-
-      // Thêm sự kiện để in giá trị alpha, beta, radius khi camera thay đổi
-      camera.onViewMatrixChangedObservable.add(() => {
-        console.log(
-          `Alpha: ${camera.alpha}, Beta: ${camera.beta}, Radius: ${camera.radius}`
-        );
-      });
-
+      camera.attachControl(canvas, true);
       return camera;
     },
-
 
     logMessage(message) {
       const logDiv = document.getElementById("log");
@@ -192,77 +178,73 @@ export default {
 
         const fm = xr.baseExperience.featuresManager;
 
-        const xrPlanes = fm.enableFeature(
-          WebXRPlaneDetector.Name,
-          "latest"
-        );
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
 
         xrPlanes.onPlaneAddedObservable.add((plane) => {
-          plane.polygonDefinition.push(plane.polygonDefinition[0]);
-          var polygon_triangulation = new PolygonMeshBuilder(
-            "name",
-            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-            scene
-          );
-          var polygon = polygon_triangulation.build(false, 0.01);
-          plane.mesh = polygon;
-          this.planes[plane.id] = plane.mesh;
-          const mat = new StandardMaterial("mat", scene);
-          mat.alpha = 0.5;
-          // pick a random color
-          mat.diffuseColor = Color3.Random();
-          polygon.createNormals();
-          plane.mesh.material = mat;
-
-          plane.mesh.rotationQuaternion = new Quaternion();
-          plane.transformationMatrix.decompose(
-            plane.mesh.scaling,
-            plane.mesh.rotationQuaternion,
-            plane.mesh.position
-          );
+          // plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          // var polygon_triangulation = new PolygonMeshBuilder(
+          //   "name",
+          //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          //   scene
+          // );
+          // var polygon = polygon_triangulation.build(false, 0.01);
+          // plane.mesh = polygon;
+          // this.planes[plane.id] = plane.mesh;
+          // const mat = new StandardMaterial("mat", scene);
+          // mat.alpha = 0.5;
+          // // pick a random color
+          // mat.diffuseColor = Color3.Random();
+          // polygon.createNormals();
+          // plane.mesh.material = mat;
+          // plane.mesh.rotationQuaternion = new Quaternion();
+          // plane.transformationMatrix.decompose(
+          //   plane.mesh.scaling,
+          //   plane.mesh.rotationQuaternion,
+          //   plane.mesh.position
+          // );
         });
 
         xrPlanes.onPlaneUpdatedObservable.add((plane) => {
-          let mat;
-          if (plane.mesh) {
-            // keep the material, dispose the old polygon
-            mat = plane.mesh.material;
-            plane.mesh.dispose(false, false);
-          }
-          const some = plane.polygonDefinition.some((p) => !p);
-          if (some) {
-            return;
-          }
-          plane.polygonDefinition.push(plane.polygonDefinition[0]);
-          var polygon_triangulation = new PolygonMeshBuilder(
-            "name",
-            plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
-            scene
-          );
-          var polygon = polygon_triangulation.build(false, 0.01);
-          polygon.createNormals();
-          plane.mesh = polygon;
-          this.planes[plane.id] = plane.mesh;
-          plane.mesh.material = mat;
-          plane.mesh.rotationQuaternion = new Quaternion();
-          plane.transformationMatrix.decompose(
-            plane.mesh.scaling,
-            plane.mesh.rotationQuaternion,
-            plane.mesh.position
-          );
+          // let mat;
+          // if (plane.mesh) {
+          //   // keep the material, dispose the old polygon
+          //   mat = plane.mesh.material;
+          //   plane.mesh.dispose(false, false);
+          // }
+          // const some = plane.polygonDefinition.some((p) => !p);
+          // if (some) {
+          //   return;
+          // }
+          // plane.polygonDefinition.push(plane.polygonDefinition[0]);
+          // var polygon_triangulation = new PolygonMeshBuilder(
+          //   "name",
+          //   plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)),
+          //   scene
+          // );
+          // var polygon = polygon_triangulation.build(false, 0.01);
+          // polygon.createNormals();
+          // plane.mesh = polygon;
+          // this.planes[plane.id] = plane.mesh;
+          // plane.mesh.material = mat;
+          // plane.mesh.rotationQuaternion = new Quaternion();
+          // plane.transformationMatrix.decompose(
+          //   plane.mesh.scaling,
+          //   plane.mesh.rotationQuaternion,
+          //   plane.mesh.position
+          // );
         });
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
-          if (plane && this.planes[plane.id]) {
-            this.planes[plane.id].dispose();
-          }
+          // if (plane && this.planes[plane.id]) {
+          //   this.planes[plane.id].dispose();
+          // }
         });
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          this.planes.forEach((plane) => plane.dispose());
-          this.planes.length = 0;
+          // this.planes.forEach((plane) => plane.dispose());
+          // this.planes.length = 0;
         });
-      } catch (error) { 
+      } catch (error) {
         console.error("WebXR Plane Detector not supported:", error);
         this.logMessage("WebXR Plane Detector not supported: " + error);
       }
