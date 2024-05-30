@@ -34,6 +34,8 @@ import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from 'earcut';
 
+window.earcut = earcut; // Ensure earcut is available globally
+
 export default {
   name: "BabylonCpn",
   data() {
