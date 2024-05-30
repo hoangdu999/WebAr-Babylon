@@ -90,7 +90,6 @@ export default {
       this.camera = this.addCamera(scene);
 
       // Thêm video layer
-      this.addVideoLayer(scene, canvas);
 
       // Thiết lập AR
       await this.setupXR(scene);
@@ -150,17 +149,6 @@ export default {
       return camera;
     },
 
-    addVideoLayer(scene, canvas) {
-      var camera = new ArcRotateCamera(
-        "Camera",
-        -Math.PI / 2,
-        Math.PI / 2,
-        12,
-        Vector3.Zero(),
-        scene
-      );
-      camera.attachControl(canvas, true);
-    },
 
     logMessage(message) {
       const logDiv = document.getElementById("log");
