@@ -33,9 +33,9 @@ import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from "earcut";
-import { AdvancedDynamicTexture, Button,Control } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
-window.earcut = earcut; // Ensure earcut is available globally
+window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
 
 export default {
   name: "BabylonCpn",
@@ -235,11 +235,12 @@ export default {
       guiButton.width = "300px";
       guiButton.height = "100px";
       guiButton.color = "white";
+      guiButton.fontSize = "bold 24px"; 
       guiButton.cornerRadius = 5;
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
-      guiButton.bottom = "50px"; // Điều chỉnh khoảng cách từ dưới cùng
+      guiButton.bottom = "100px"; // Điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
     }
   },
