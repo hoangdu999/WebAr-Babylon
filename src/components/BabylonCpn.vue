@@ -46,6 +46,7 @@ export default {
       shadowGenerator: null,
       model: null,
       planes: {},
+      placeModeEnabled: false,
     };
   },
   mounted() {
@@ -73,6 +74,15 @@ export default {
       this.logMessage(
         "Canvas width: " + canvas.width + " Canvas height: " + canvas.height
       );
+      canvas.addEventListener("click", (event) => {
+        if (this.placeModeEnabled) {
+          const pickResult = this.scene.pick(event.clientX, event.clientY);
+          if (pickResult.hit) {
+            this.loadModel(this.scene, pickResult.pickedPoint);
+            this.placeModeEnabled = false; // Disable place mode after placing the model
+          }
+        }
+      });
     },
 
     async createScene(canvas) {
@@ -227,6 +237,9 @@ export default {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
+    },
+    enablePlaceMode() {
+      this.placeModeEnabled = true;
     },
   },
 };
