@@ -27,6 +27,7 @@ import {
   PolygonMeshBuilder,
   StandardMaterial,
   Color3,
+  DynamicTexture,
   Quaternion,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
@@ -46,7 +47,6 @@ export default {
       shadowGenerator: null,
       model: null,
       planes: {},
-      placeModeEnabled: false,
     };
   },
   mounted() {
@@ -74,19 +74,6 @@ export default {
       this.logMessage(
         "Canvas width: " + canvas.width + " Canvas height: " + canvas.height
       );
-      canvas.addEventListener("click", (event) => {
-        if (this.placeModeEnabled) {
-          const pickResult = this.scene.pick(event.clientX, event.clientY);
-          if (pickResult.hit) {
-            if (pickResult.pickedPoint) {
-              this.loadModel(this.scene, pickResult.pickedPoint);
-              this.placeModeEnabled = false; // Disable place mode after placing the model
-            } else {
-              this.logMessage("Pick result does not have a picked point");
-            }
-          }
-        }
-      });
     },
 
     async createScene(canvas) {
@@ -97,7 +84,7 @@ export default {
       this.camera = this.addCamera(scene, canvas);
 
       await this.setupXR(scene);
-
+      this.createLogPlane(scene);
       return scene;
     },
 
@@ -128,10 +115,32 @@ export default {
       camera.attachControl(canvas, true);
       return camera;
     },
-
+    createLogPlane(scene) {
+      const plane = MeshBuilder.CreatePlane("logPlane", { width: 2, height: 1 }, scene);
+      plane.position = new Vector3(0, 1.5, 3);
+      
+      const dynamicTexture = new DynamicTexture("dynamicTexture", { width: 512, height: 256 }, scene);
+      const material = new StandardMaterial("material", scene);
+      material.diffuseTexture = dynamicTexture;
+      plane.material = material;
+      
+      this.dynamicTexture = dynamicTexture;
+      this.logPlane = plane;
+      
+      this.updateLogTexture("Initial log message");
+    },
+    updateLogTexture(message) {
+      if (this.dynamicTexture) {
+        const context = this.dynamicTexture.getContext();
+        context.clearRect(0, 0, this.dynamicTexture.getSize().width, this.dynamicTexture.getSize().height);
+        this.dynamicTexture.drawText(message, null, null, "bold 44px Arial", "white", "black", true);
+        this.dynamicTexture.update();
+      }
+    },
     logMessage(message) {
       const logDiv = document.getElementById("log");
       logDiv.innerHTML += message + "<br>";
+      this.updateLogTexture(logDiv.innerHTML);
     },
 
     async loadModel(scene, position) {
@@ -241,9 +250,6 @@ export default {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
-    },
-    enablePlaceMode() {
-      this.placeModeEnabled = true;
     },
   },
 };
