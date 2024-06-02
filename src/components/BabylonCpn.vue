@@ -28,12 +28,12 @@ import {
   StandardMaterial,
   Color3,
   Quaternion,
-  GUI,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from "earcut";
+import { GUI } from "@babylonjs/gui";
 
 window.earcut = earcut; // Ensure earcut is available globally
 
