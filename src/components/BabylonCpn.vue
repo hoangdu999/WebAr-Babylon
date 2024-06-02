@@ -78,8 +78,12 @@ export default {
         if (this.placeModeEnabled) {
           const pickResult = this.scene.pick(event.clientX, event.clientY);
           if (pickResult.hit) {
-            this.loadModel(this.scene, pickResult.pickedPoint);
-            this.placeModeEnabled = false; // Disable place mode after placing the model
+            if (pickResult.pickedPoint) {
+              this.loadModel(this.scene, pickResult.pickedPoint);
+              this.placeModeEnabled = false; // Disable place mode after placing the model
+            } else {
+              this.logMessage("Pick result does not have a picked point");
+            }
           }
         }
       });
