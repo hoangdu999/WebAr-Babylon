@@ -229,20 +229,20 @@ export default {
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
     },
-    createGUIButton(){
+    createGUIButton() {
       let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       let guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
       guiButton.color = "white";
-      guiButton.fontSize = "bold 24px"; 
+      guiButton.fontSize = "24px"; // Thay đổi kích thước chữ ở đây
       guiButton.cornerRadius = 5;
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
-      guiButton.bottom = "100px"; // Điều chỉnh khoảng cách từ dưới cùng
+      guiButton.top = "-100px"; // Sử dụng top với giá trị âm để điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
-    }
+    },
   },
 };
 </script>
