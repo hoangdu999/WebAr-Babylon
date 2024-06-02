@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <BabylonCpn @placeModel="handlePlaceModel" />
+    <BabylonCpn ref="babylonCpn" />
     <button @click="enablePlaceMode">Đặt Mô Hình</button>
   </div>
 </template>
@@ -15,12 +15,24 @@ export default {
   },
   methods: {
     enablePlaceMode() {
-      this.$emit('placeModel');
-    },
-    handlePlaceModel() {
-      console.log('Sự kiện đặt mô hình đã được kích hoạt');
-      // Logic bổ sung nếu cần
+      this.$refs.babylonCpn.enablePlaceMode();
+      
     },
   },
 };
 </script>
+
+<style scoped>
+#app {
+  position: relative;
+}
+
+button {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  font-size: 16px;
+}
+</style>
