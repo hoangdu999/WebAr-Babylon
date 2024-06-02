@@ -231,17 +231,16 @@ export default {
     },
     createGUIButton(){
       let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-      let guiButton = Button.CreateSimpleButton("guiButton", "Plane");
-      guiButton.width = "50px";
-      guiButton.height = "50px";
-      guiButton.top = "10px";
+      let guiButton = Button.CreateSimpleButton("guiButton", "Place");
+      guiButton.width = "300px";
+      guiButton.height = "100px";
       guiButton.color = "white";
       guiButton.cornerRadius = 5;
-      guiButton.background = "green";
-      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
-      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
+      guiButton.background = "black";
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
+      guiButton.bottom = "50px"; // Điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
-
     }
   },
 };
