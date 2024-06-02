@@ -27,8 +27,8 @@ import {
   PolygonMeshBuilder,
   StandardMaterial,
   Color3,
-  DynamicTexture,
   Quaternion,
+  GUI,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -84,7 +84,7 @@ export default {
       this.camera = this.addCamera(scene, canvas);
 
       await this.setupXR(scene);
-      this.createLogPlane(scene);
+      this.createGUIButton();
       return scene;
     },
 
@@ -115,32 +115,10 @@ export default {
       camera.attachControl(canvas, true);
       return camera;
     },
-    createLogPlane(scene) {
-      const plane = MeshBuilder.CreatePlane("logPlane", { width: 2, height: 1 }, scene);
-      plane.position = new Vector3(0, 1.5, 3);
-      
-      const dynamicTexture = new DynamicTexture("dynamicTexture", { width: 512, height: 256 }, scene);
-      const material = new StandardMaterial("material", scene);
-      material.diffuseTexture = dynamicTexture;
-      plane.material = material;
-      
-      this.dynamicTexture = dynamicTexture;
-      this.logPlane = plane;
-      
-      this.updateLogTexture("Initial log message");
-    },
-    updateLogTexture(message) {
-      if (this.dynamicTexture) {
-        const context = this.dynamicTexture.getContext();
-        context.clearRect(0, 0, this.dynamicTexture.getSize().width, this.dynamicTexture.getSize().height);
-        this.dynamicTexture.drawText(message, null, null, "bold 44px Arial", "white", "black", true);
-        this.dynamicTexture.update();
-      }
-    },
+
     logMessage(message) {
       const logDiv = document.getElementById("log");
       logDiv.innerHTML += message + "<br>";
-      this.updateLogTexture(logDiv.innerHTML);
     },
 
     async loadModel(scene, position) {
@@ -251,6 +229,20 @@ export default {
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
     },
+    createGUIButton(){
+      let guiCanvas = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      let guiButton = GUI.Button.CreateSimpleButton("guiButton", "Plane");
+      guiButton.width = "50px";
+      guiButton.height = "50px";
+      guiButton.top = "10px";
+      guiButton.color = "white";
+      guiButton.cornerRadius = 5;
+      guiButton.background = "green";
+      guiButton.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
+      guiButton.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+      guiCanvas.addControl(guiButton);
+
+    }
   },
 };
 </script>
