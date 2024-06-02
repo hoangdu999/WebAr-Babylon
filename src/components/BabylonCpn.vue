@@ -33,7 +33,7 @@ import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from "earcut";
-import { GUI } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button,Control } from "@babylonjs/gui";
 
 window.earcut = earcut; // Ensure earcut is available globally
 
@@ -230,16 +230,16 @@ export default {
       }
     },
     createGUIButton(){
-      let guiCanvas = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
-      let guiButton = GUI.Button.CreateSimpleButton("guiButton", "Plane");
+      let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      let guiButton = Button.CreateSimpleButton("guiButton", "Plane");
       guiButton.width = "50px";
       guiButton.height = "50px";
       guiButton.top = "10px";
       guiButton.color = "white";
       guiButton.cornerRadius = 5;
       guiButton.background = "green";
-      guiButton.verticalAlignment = GUI.Control.VERTICAL_ALIGNMENT_TOP;
-      guiButton.horizontalAlignment = GUI.Control.HORIZONTAL_ALIGNMENT_LEFT;
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
       guiCanvas.addControl(guiButton);
 
     }
