@@ -28,6 +28,8 @@ import {
   StandardMaterial,
   Color3,
   Quaternion,
+  ActionManager,
+  ExecuteCodeAction
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -47,6 +49,7 @@ export default {
       shadowGenerator: null,
       model: null,
       planes: {},
+      selectedPosition: null,
     };
   },
   mounted() {
@@ -211,7 +214,17 @@ export default {
             plane.mesh.rotationQuaternion,
             plane.mesh.position
           );
+          // Lưu vị trí của mặt phẳng đã phát hiện
+          plane.mesh.actionManager = new ActionManager(scene);
+          plane.mesh.actionManager.registerAction(new ExecuteCodeAction(
+            ActionManager.OnPickTrigger,
+            (evt) => {
+              this.selectedPosition = plane.mesh.position.clone();
+              this.logMessage("Selected position: " + this.selectedPosition);
+            }
+          ));
         });
+      
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
           if (plane.mesh) {
@@ -240,9 +253,19 @@ export default {
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
-      guiButton.top = "-100px"; // Sử dụng top với giá trị âm để điều chỉnh khoảng cách từ dưới cùng
+      guiButton.top = "-100px"; // Sử dụng top với giá trị âm để  điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
+
+      guiButton.onPointerUpObservable.add(() => {
+        if (this.selectedPosition && this.model) {
+          this.model.position = this.selectedPosition;
+          this.logMessage("Model placed at: " + this.selectedPosition);
+        } else {
+          this.logMessage("No position selected or model not loaded.");
+        }
+      });
     },
+
   },
 };
 </script>
