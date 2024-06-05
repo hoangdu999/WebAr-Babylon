@@ -134,12 +134,15 @@ export default {
         (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
             mesh.position = position;
-            mesh.scaling = new Vector3(0.1, 0.1, 0.1); // Thu nhỏ mô hình
+            mesh.scaling = new Vector3(2, 2, 2); // Thu nhỏ mô hình
             console.log("Mesh position set to:", position);
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
           this.animationGroup = animationGroups[0]; // Lưu nhóm animation đầu tiên
+          if (this.animationGroup) {
+            this.animationGroup.stop(); // Dừng animation khi bắt đầu
+          }
           console.log("Model loaded and placed at position:", position);
         },
         null,
