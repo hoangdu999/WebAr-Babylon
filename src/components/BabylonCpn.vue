@@ -86,7 +86,7 @@ export default {
       this.addLight(scene);
 
       this.camera = this.addCamera(scene, canvas);
-      await this.loadModel(scene, new Vector3(0, 0, 0));
+      await this.loadModel(scene, new Vector3(0, -2, 0));
       await this.setupXR(scene);
       this.createGUIButton();
       return scene;
@@ -134,7 +134,7 @@ export default {
         (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
             mesh.position = position;
-            mesh.scaling = new Vector3(0.2, 0.2, 0.2); // Thu nhỏ mô hình
+            mesh.scale.set(2, 2, 2);
             console.log("Mesh position set to:", position);
             this.shadowGenerator.addShadowCaster(mesh);
           });
