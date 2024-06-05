@@ -134,7 +134,7 @@ export default {
         (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
             mesh.position = position;
-            mesh.scaling = new Vector3(2, 2, 2); // Thu nhỏ mô hình
+            mesh.scaling = new Vector3(0.2, 0.2, 0.2); // Thu nhỏ mô hình
             console.log("Mesh position set to:", position);
             this.shadowGenerator.addShadowCaster(mesh);
           });
