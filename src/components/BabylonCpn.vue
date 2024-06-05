@@ -1,13 +1,28 @@
+<template>
+  <div>
+    <canvas
+      id="renderCanvas"
+      touch-action="none"
+      style="width: 100%; height: 100%"
+    ></canvas>
+    <div id="log"></div>
+  </div>
+</template>
+
 <script>
 import {
   Engine,
   Scene,
   ArcRotateCamera,
   Vector3,
+  Layer,
   SceneLoader,
-  DirectionalLight,
+  VideoTexture,
   ShadowGenerator,
+  DirectionalLight,
+  MeshBuilder,
   WebXRPlaneDetector,
+  Matrix,
   Vector2,
   PolygonMeshBuilder,
   StandardMaterial,
@@ -18,8 +33,9 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
-import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
+import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from "earcut";
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
 window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
 
@@ -33,13 +49,14 @@ export default {
       shadowGenerator: null,
       model: null,
       planes: {},
-      selectedPosition: null, // Lưu vị trí đã chọn
-      animationGroup: null, // Nhóm animation
+      selectedPosition: null,
+      animationGroup: null,
     };
   },
   mounted() {
     this.initializeBabylon();
   },
+
   methods: {
     async initializeBabylon() {
       var canvas = document.getElementById("renderCanvas");
@@ -67,10 +84,9 @@ export default {
       var scene = new Scene(this.engine);
 
       this.addLight(scene);
+
       this.camera = this.addCamera(scene, canvas);
-
-      await this.loadModel(scene, new Vector3(0, 0, 0)); // Tải mô hình ở vị trí trung tâm
-
+      await this.loadModel(scene, new Vector3(0, 0, 0));
       await this.setupXR(scene);
       this.createGUIButton();
       return scene;
@@ -118,9 +134,8 @@ export default {
         (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
             mesh.position = position;
-            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
+            mesh.scaling = new Vector3(0.1, 0.1, 0.1); // Thu nhỏ mô hình
             console.log("Mesh position set to:", position);
-
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
@@ -160,6 +175,7 @@ export default {
           this.planes[plane.id] = plane.mesh;
           const mat = new StandardMaterial("mat", scene);
           mat.alpha = 0.5;
+          // pick a random color
           mat.diffuseColor = Color3.Random();
           polygon.createNormals();
           plane.mesh.material = mat;
@@ -185,6 +201,7 @@ export default {
         xrPlanes.onPlaneUpdatedObservable.add((plane) => {
           let mat;
           if (plane.mesh) {
+            // keep the material, dispose the old polygon
             mat = plane.mesh.material;
             plane.mesh.dispose(false, false);
           }
@@ -209,7 +226,6 @@ export default {
             plane.mesh.rotationQuaternion,
             plane.mesh.position
           );
-
           // Lưu vị trí của mặt phẳng đã phát hiện
           plane.mesh.actionManager = new ActionManager(scene);
           plane.mesh.actionManager.registerAction(new ExecuteCodeAction(
@@ -220,6 +236,7 @@ export default {
             }
           ));
         });
+      
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
           if (plane.mesh) {
@@ -237,19 +254,18 @@ export default {
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
     },
-
     createGUIButton() {
       let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       let guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
       guiButton.color = "white";
-      guiButton.fontSize = "24px";
+      guiButton.fontSize = "24px"; // Thay đổi kích thước chữ ở đây
       guiButton.cornerRadius = 5;
       guiButton.background = "black";
-      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.top = "-100px";
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
+      guiButton.top = "-100px"; // Sử dụng top với giá trị âm để  điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
 
       guiButton.onPointerUpObservable.add(() => {
@@ -274,6 +290,7 @@ export default {
         }
       });
     },
+
   },
 };
 </script>
