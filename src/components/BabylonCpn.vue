@@ -1,28 +1,13 @@
-<template>
-  <div>
-    <canvas
-      id="renderCanvas"
-      touch-action="none"
-      style="width: 100%; height: 100%"
-    ></canvas>
-    <div id="log"></div>
-  </div>
-</template>
-
 <script>
 import {
   Engine,
   Scene,
   ArcRotateCamera,
   Vector3,
-  Layer,
   SceneLoader,
-  VideoTexture,
-  ShadowGenerator,
   DirectionalLight,
-  MeshBuilder,
+  ShadowGenerator,
   WebXRPlaneDetector,
-  Matrix,
   Vector2,
   PolygonMeshBuilder,
   StandardMaterial,
@@ -33,9 +18,8 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
-import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import earcut from "earcut";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
+import earcut from "earcut";
 
 window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
 
@@ -49,13 +33,13 @@ export default {
       shadowGenerator: null,
       model: null,
       planes: {},
-      selectedPosition: null,
+      selectedPosition: null, // Lưu vị trí đã chọn
+      animationGroup: null, // Nhóm animation
     };
   },
   mounted() {
     this.initializeBabylon();
   },
-
   methods: {
     async initializeBabylon() {
       var canvas = document.getElementById("renderCanvas");
@@ -83,9 +67,10 @@ export default {
       var scene = new Scene(this.engine);
 
       this.addLight(scene);
-
       this.camera = this.addCamera(scene, canvas);
-      await this.loadModel(scene, new Vector3(0, 0, 0));
+
+      await this.loadModel(scene, new Vector3(0, 0, 0)); // Tải mô hình ở vị trí trung tâm
+
       await this.setupXR(scene);
       this.createGUIButton();
       return scene;
@@ -130,14 +115,16 @@ export default {
         "/models/yasuo/",
         "scene.gltf",
         scene,
-        (meshes) => {
+        (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
             mesh.position = position;
+            mesh.scaling = new Vector3(0.1, 0.1, 0.1);
             console.log("Mesh position set to:", position);
 
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
+          this.animationGroup = animationGroups[0]; // Lưu nhóm animation đầu tiên
           console.log("Model loaded and placed at position:", position);
         },
         null,
@@ -173,7 +160,6 @@ export default {
           this.planes[plane.id] = plane.mesh;
           const mat = new StandardMaterial("mat", scene);
           mat.alpha = 0.5;
-          // pick a random color
           mat.diffuseColor = Color3.Random();
           polygon.createNormals();
           plane.mesh.material = mat;
@@ -184,12 +170,21 @@ export default {
             plane.mesh.rotationQuaternion,
             plane.mesh.position
           );
+
+          // Lưu vị trí của mặt phẳng đã phát hiện
+          plane.mesh.actionManager = new ActionManager(scene);
+          plane.mesh.actionManager.registerAction(new ExecuteCodeAction(
+            ActionManager.OnPickTrigger,
+            (evt) => {
+              this.selectedPosition = plane.mesh.position.clone();
+              this.logMessage("Selected position: " + this.selectedPosition);
+            }
+          ));
         });
 
         xrPlanes.onPlaneUpdatedObservable.add((plane) => {
           let mat;
           if (plane.mesh) {
-            // keep the material, dispose the old polygon
             mat = plane.mesh.material;
             plane.mesh.dispose(false, false);
           }
@@ -214,6 +209,7 @@ export default {
             plane.mesh.rotationQuaternion,
             plane.mesh.position
           );
+
           // Lưu vị trí của mặt phẳng đã phát hiện
           plane.mesh.actionManager = new ActionManager(scene);
           plane.mesh.actionManager.registerAction(new ExecuteCodeAction(
@@ -224,7 +220,6 @@ export default {
             }
           ));
         });
-      
 
         xrPlanes.onPlaneRemovedObservable.add((plane) => {
           if (plane.mesh) {
@@ -242,30 +237,43 @@ export default {
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
     },
+
     createGUIButton() {
       let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       let guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
       guiButton.color = "white";
-      guiButton.fontSize = "24px"; // Thay đổi kích thước chữ ở đây
+      guiButton.fontSize = "24px";
       guiButton.cornerRadius = 5;
       guiButton.background = "black";
-      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM; // Đặt nút ở dưới cùng
-      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER; // Căn giữa theo chiều ngang
-      guiButton.top = "-100px"; // Sử dụng top với giá trị âm để  điều chỉnh khoảng cách từ dưới cùng
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      guiButton.top = "-100px";
       guiCanvas.addControl(guiButton);
 
       guiButton.onPointerUpObservable.add(() => {
         if (this.selectedPosition && this.model) {
-          this.model.position = this.selectedPosition;
-          this.logMessage("Model placed at: " + this.selectedPosition);
+          this.logMessage("Placing model at: " + this.selectedPosition);
+          this.model.position = this.selectedPosition.clone();
+          this.logMessage("Model placed at: " + this.model.position);
+
+          // Bắt đầu phát animation
+          if (this.animationGroup) {
+            this.animationGroup.start(true);
+            this.logMessage("Animation started.");
+            setTimeout(() => {
+              this.animationGroup.stop();
+              this.logMessage("Animation stopped after 2 seconds.");
+            }, 2000);
+          } else {
+            this.logMessage("No animation group found.");
+          }
         } else {
           this.logMessage("No position selected or model not loaded.");
         }
       });
     },
-
   },
 };
 </script>
