@@ -94,8 +94,8 @@ export default {
       ground.receiveShadows = true;
       ground.position.y = 0;
 
-      await this.setupXR(scene);
-      this.createGUIButton();
+      // await this.setupXR(scene);
+      // this.createGUIButton();
       return scene;
     },
 
@@ -142,7 +142,7 @@ export default {
           meshes.forEach((mesh) => {
              mesh.position.y = 0;
              mesh.position.z = 0;
-             mesh.scaling = new Vector3(0.02, 0.02, 0.02);
+            //  mesh.scaling = new Vector3(1, 1,1);
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
@@ -277,27 +277,27 @@ export default {
       guiButton.top = "-100px"; // Sử dụng top với giá trị âm để  điều chỉnh khoảng cách từ dưới cùng
       guiCanvas.addControl(guiButton);
 
-      guiButton.onPointerUpObservable.add(() => {
-        if (this.selectedPosition && this.model) {
-          this.logMessage("Placing model at: " + this.selectedPosition);
-          this.model.position = this.selectedPosition.clone();
-          this.logMessage("Model placed at: " + this.model.position);
+      // guiButton.onPointerUpObservable.add(() => {
+      //   if (this.selectedPosition && this.model) {
+      //     this.logMessage("Placing model at: " + this.selectedPosition);
+      //     this.model.position = this.selectedPosition.clone();
+      //     this.logMessage("Model placed at: " + this.model.position);
 
-          // Bắt đầu phát animation
-          if (this.animationGroup) {
-            this.animationGroup.start(true);
-            this.logMessage("Animation started.");
-            setTimeout(() => {
-              this.animationGroup.stop();
-              this.logMessage("Animation stopped after 2 seconds.");
-            }, 2000);
-          } else {
-            this.logMessage("No animation group found.");
-          }
-        } else {
-          this.logMessage("No position selected or model not loaded.");
-        }
-      });
+      //     // Bắt đầu phát animation
+      //     if (this.animationGroup) {
+      //       this.animationGroup.start(true);
+      //       this.logMessage("Animation started.");
+      //       setTimeout(() => {
+      //         this.animationGroup.stop();
+      //         this.logMessage("Animation stopped after 2 seconds.");
+      //       }, 2000);
+      //     } else {
+      //       this.logMessage("No animation group found.");
+      //     }
+      //   } else {
+      //     this.logMessage("No position selected or model not loaded.");
+      //   }
+      // });
     },
 
   },
