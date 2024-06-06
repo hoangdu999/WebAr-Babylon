@@ -142,10 +142,9 @@ export default {
           meshes.forEach((mesh) => {
              mesh.position.y = 0;
              mesh.position.z = 0;
-             mesh.scaling = new Vector3(0.01, 0.01, 0.01);
+             mesh.scaling = new Vector3(0.001, 0.001, 0.001);
             this.shadowGenerator.addShadowCaster(mesh);
           });
-          this.model.scaling = new Vector3(0.01, 0.01, 0.01);
           this.model = meshes[0];
           this.animationGroup = animationGroups[0]; // Lưu nhóm animation đầu tiên
           if (this.animationGroup) {
