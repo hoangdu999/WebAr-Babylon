@@ -258,6 +258,11 @@ export default {
           Object.values(this.planes).forEach((mesh) => mesh.dispose());
           this.planes = {};
         });
+        xr.baseExperience.sessionManager.onXRSessionStart.add(() => {
+          if (this.model) {
+            this.model.scaling = new Vector3(1, 1, 1); // Điều chỉnh tỷ lệ của mô hình trong môi trường AR
+          }
+        });
       } catch (e) {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
