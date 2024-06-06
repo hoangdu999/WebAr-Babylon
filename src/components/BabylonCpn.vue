@@ -260,7 +260,7 @@ export default {
         });
         xr.baseExperience.sessionManager.onXRSessionStart.add(() => {
           if (this.model) {
-            this.model.scaling = new Vector3(1, 1, 1); // Điều chỉnh tỷ lệ của mô hình trong môi trường AR
+            this.model.scaling = new Vector3(0.1, 0.1, 0.11); // Điều chỉnh tỷ lệ của mô hình trong môi trường AR
           }
         });
       } catch (e) {
