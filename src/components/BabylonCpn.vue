@@ -94,7 +94,7 @@ export default {
       ground.receiveShadows = true;
       ground.position.y = 0;
 
-      // await this.setupXR(scene);
+      await this.setupXR(scene);
       // this.createGUIButton();
       return scene;
     },
