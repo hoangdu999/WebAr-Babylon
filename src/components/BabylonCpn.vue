@@ -86,7 +86,6 @@ export default {
       this.addLight(scene);
 
       this.camera = this.addCamera(scene, canvas);
-      await this.loadModel(scene);
 
       const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
       ground.rotation.x = Math.PI / 2;
@@ -255,18 +254,18 @@ export default {
         });
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          Object.values(this.planes).forEach((mesh) => mesh.dispose());
-          this.planes = {};
+          this.onXRSessionInit(scene); 
         });
-        xr.baseExperience.sessionManager.onXRSessionStart.add(() => {
-          if (this.model) {
-            this.model.scaling = new Vector3(0.1, 0.1, 0.11); // Điều chỉnh tỷ lệ của mô hình trong môi trường AR
-          }
-        });
+        
       } catch (e) {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
+    },
+    async onXRSessionInit(scene) {
+      await this.loadModel(scene);
+      Object.values(this.planes).forEach((mesh) => mesh.dispose());
+      this.planes = {};
     },
     createGUIButton() {
       let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
