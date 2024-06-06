@@ -86,7 +86,14 @@ export default {
       this.addLight(scene);
 
       this.camera = this.addCamera(scene, canvas);
-      await this.loadModel(scene, new Vector3(0, -2, 0));
+      await this.loadModel(scene);
+
+      const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
+      ground.rotation.x = Math.PI / 2;
+      ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
+      ground.receiveShadows = true;
+      ground.position.y = 0;
+
       await this.setupXR(scene);
       this.createGUIButton();
       return scene;
@@ -125,7 +132,7 @@ export default {
       logDiv.innerHTML += message + "<br>";
     },
 
-    async loadModel(scene, position) {
+    async loadModel(scene) {
       await SceneLoader.ImportMesh(
         "",
         "/models/yasuo/",
@@ -133,9 +140,8 @@ export default {
         scene,
         (meshes, particleSystems, skeletons, animationGroups) => {
           meshes.forEach((mesh) => {
-            mesh.position = position;
-            mesh.scale.set(2, 2, 2);
-            console.log("Mesh position set to:", position);
+             mesh.position.y = 0;
+             mesh.position.z = 0;
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
@@ -143,7 +149,6 @@ export default {
           if (this.animationGroup) {
             this.animationGroup.stop(); // Dừng animation khi bắt đầu
           }
-          console.log("Model loaded and placed at position:", position);
         },
         null,
         (scene, message) => {
