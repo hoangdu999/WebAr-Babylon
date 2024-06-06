@@ -142,6 +142,7 @@ export default {
           meshes.forEach((mesh) => {
              mesh.position.y = 0;
              mesh.position.z = 0;
+             mesh.scaling = new Vector3(0.1, 0.1, 0.1);
             this.shadowGenerator.addShadowCaster(mesh);
           });
           this.model = meshes[0];
