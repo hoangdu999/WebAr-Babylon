@@ -145,6 +145,7 @@ export default {
              mesh.scaling = new Vector3(0.01, 0.01, 0.01);
             this.shadowGenerator.addShadowCaster(mesh);
           });
+          this.model.scaling = new Vector3(0.01, 0.01, 0.01);
           this.model = meshes[0];
           this.animationGroup = animationGroups[0]; // Lưu nhóm animation đầu tiên
           if (this.animationGroup) {
