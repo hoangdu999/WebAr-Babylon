@@ -161,6 +161,8 @@ export default {
               this.marker = MeshBuilder.CreateTorus('marker', { diameter: 0.15, thickness: 0.05 }, scene);
               this.marker.isVisible = true;
               this.marker.rotationQuaternion = new Quaternion();
+            } else {
+              this.marker.isVisible = true;
             }
             this.hitTest.transformationMatrix.decompose(this.marker.scaling, this.marker.rotationQuaternion, this.marker.position);
           } else {
