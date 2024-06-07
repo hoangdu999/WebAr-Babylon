@@ -139,6 +139,7 @@ export default {
             const model = meshes[0];
             model.rotationQuaternion = new Quaternion();
             model.position.y += 0.1;
+            model.scaling.scaleInPlace(0.1);
             model.bakeCurrentTransformIntoVertices();
             this.model = model;
 
