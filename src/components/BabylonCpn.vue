@@ -129,11 +129,33 @@ export default {
     },
 
     async loadModel(scene) {
-      const model = new MeshBuilder.CreateBox("box", {width: 0.2, height: 0.2, depth: 0.2}, scene);
-      model.rotationQuaternion = new Quaternion();
-      model.position.y += 0.1;
-      model.bakeCurrentTransformIntoVertices();
-      this.model = model;
+      await SceneLoader.ImportMesh(
+        "",
+        "/models/yasuo/",
+        "scene.gltf",
+        scene,
+        (meshes, particleSystems, skeletons, animationGroups) => {
+          if (meshes.length > 0) {
+            const model = meshes[0];
+            model.rotationQuaternion = new Quaternion();
+            model.position.y += 0.1;
+            model.bakeCurrentTransformIntoVertices();
+            this.model = model;
+
+            meshes.forEach((mesh) => {
+              if (mesh !== model) {
+                mesh.parent = model;
+              }
+            });
+          } else {
+            console.error("No meshes were loaded from the model.");
+          }
+        },
+        null,
+        (scene, message) => {
+          console.error("Error loading model:", message);
+        }
+      );
     },
 
     async setupXR(scene) {
