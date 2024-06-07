@@ -138,8 +138,8 @@ export default {
           if (meshes.length > 0) {
             const model = meshes[0];
             model.rotationQuaternion = new Quaternion();
-            model.position.y += 0.1;
-            model.scaling.scaleInPlace(0.1);
+            model.position.set(0, 0.1, 0); // Đặt vị trí ban đầu của mô hình
+            model.scaling.scaleInPlace(0.01); // Điều chỉnh tỷ lệ để mô hình không quá lớn
             model.bakeCurrentTransformIntoVertices();
             this.model = model;
 
