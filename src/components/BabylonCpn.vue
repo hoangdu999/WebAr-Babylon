@@ -108,6 +108,7 @@ export default {
       this.shadowGenerator = new ShadowGenerator(1024, light);
       this.shadowGenerator.useBlurExponentialShadowMap = true;
       this.shadowGenerator.blurKernel = 32;
+      this.shadowGenerator.darkness = 0.5; // Điều chỉnh độ tối của bóng đổ
     },
 
     addCamera(scene, canvas) {
@@ -129,20 +130,29 @@ export default {
     },
 
     async loadModel(scene) {
-      const model = new MeshBuilder.CreateBox("box", {width: 0.2, height: 0.2, depth: 0.2}, scene);
+      const model = new MeshBuilder.CreateBox("box", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
       model.rotationQuaternion = new Quaternion();
       model.position.y += 0.1;
-      model.bakeCurrentTransformIntoVertices();
+
+     // Tạo vật liệu chuẩn và áp dụng cho mô hình
+      const material = new StandardMaterial("boxMaterial", scene);
+      material.diffuseColor = new Color3(1, 0, 0); // Red color
+      model.material = material;
+
       this.shadowGenerator.addShadowCaster(model);
+      model.receiveShadows = true;
+
       this.model = model;
 
     },
     Ground(scene){
-      const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
-      ground.rotation.x = Math.PI / 2;
-      ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
+      const ground = MeshBuilder.CreateGround('ground', { width: 4, height: 4 }, scene);
       ground.receiveShadows = true;
-      ground.position.y = 0;
+
+      // Tạo vật liệu tiêu chuẩn và áp dụng cho mặt đất
+      const groundMaterial = new StandardMaterial("groundMaterial", scene);
+      groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Grey color
+      ground.material = groundMaterial;
     },
     async setupXR(scene) {
       try {
