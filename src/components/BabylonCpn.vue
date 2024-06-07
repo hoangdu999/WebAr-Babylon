@@ -133,6 +133,7 @@ export default {
       model.rotationQuaternion = new Quaternion();
       model.position.y += 0.1;
       model.bakeCurrentTransformIntoVertices();
+      this.shadowGenerator.addShadowCaster(model);
       this.model = model;
 
     },
