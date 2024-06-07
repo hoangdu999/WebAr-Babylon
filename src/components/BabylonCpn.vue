@@ -89,7 +89,7 @@ export default {
       this.camera = this.addCamera(scene, canvas);
 
       await this.loadModel(scene);
-
+      this.Ground(scene);
       await this.setupXR(scene);
       this.createGUIButton();
       return scene;
@@ -129,30 +129,20 @@ export default {
     },
 
     async loadModel(scene) {
-      const model = new MeshBuilder.CreateBox("box", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
+      const model = new MeshBuilder.CreateBox("box", {width: 0.2, height: 0.2, depth: 0.2}, scene);
       model.rotationQuaternion = new Quaternion();
       model.position.y += 0.1;
-
-      // Create a standard material and apply to the model
-      const material = new StandardMaterial("boxMaterial", scene);
-      material.diffuseColor = new Color3(1, 0, 0); // Red color
-      model.material = material;
-
-      this.shadowGenerator.addShadowCaster(model);
-      model.receiveShadows = true;
-
+      model.bakeCurrentTransformIntoVertices();
       this.model = model;
+
     },
-    addGround(scene) {
-      const ground = MeshBuilder.CreateGround("ground", { width: 4, height: 4 }, scene);
+    Ground(scene){
+      const ground = MeshBuilder.CreatePlane('ground', { size: 2000 }, scene);
+      ground.rotation.x = Math.PI / 2;
+      ground.material = new ShadowOnlyMaterial('shadowOnly', scene);
       ground.receiveShadows = true;
-
-      // Create a standard material and apply to the ground
-      const groundMaterial = new StandardMaterial("groundMaterial", scene);
-      groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Grey color
-      ground.material = groundMaterial;
+      ground.position.y = 0;
     },
-
     async setupXR(scene) {
       try {
         const xr = await scene.createDefaultXRExperienceAsync({
