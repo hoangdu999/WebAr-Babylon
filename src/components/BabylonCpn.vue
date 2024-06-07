@@ -147,6 +147,11 @@ export default {
                 mesh.parent = model;
               }
             });
+
+            // Log the model details for debugging
+            console.log("Model loaded:", model);
+            console.log("Model position:", model.position);
+
           } else {
             console.error("No meshes were loaded from the model.");
           }
