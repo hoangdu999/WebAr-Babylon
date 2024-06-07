@@ -129,39 +129,17 @@ export default {
     },
 
     async loadModel(scene) {
-      await SceneLoader.ImportMesh(
-        "",
-        "/models/yasuo/",
-        "scene.gltf",
-        scene,
-        (meshes, particleSystems, skeletons, animationGroups) => {
-          if (meshes.length > 0) {
-            const model = meshes[0];
-            model.rotationQuaternion = new Quaternion();
-            model.position.set(0, 0.1, 0); // Đặt vị trí ban đầu của mô hình
-            model.scaling.scaleInPlace(0.01); // Điều chỉnh tỷ lệ để mô hình không quá lớn
-            model.bakeCurrentTransformIntoVertices();
-            this.model = model;
+      const model = new MeshBuilder.CreateBox("box", {width: 0.2, height: 0.2, depth: 0.2}, scene);
+      model.rotationQuaternion = new Quaternion();
+      model.position.y += 0.1;
+      model.bakeCurrentTransformIntoVertices();
+      this.model = model;
 
-            meshes.forEach((mesh) => {
-              if (mesh !== model) {
-                mesh.parent = model;
-              }
-            });
+      // Add the box to the shadow generator
+      this.shadowGenerator.addShadowCaster(model);
 
-            // Log the model details for debugging
-            console.log("Model loaded:", model);
-            console.log("Model position:", model.position);
-
-          } else {
-            console.error("No meshes were loaded from the model.");
-          }
-        },
-        null,
-        (scene, message) => {
-          console.error("Error loading model:", message);
-        }
-      );
+      // Ensure the box receives shadows
+      model.receiveShadows = true;
     },
 
     async setupXR(scene) {
