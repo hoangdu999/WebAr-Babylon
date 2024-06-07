@@ -129,17 +129,28 @@ export default {
     },
 
     async loadModel(scene) {
-      const model = new MeshBuilder.CreateBox("box", {width: 0.2, height: 0.2, depth: 0.2}, scene);
+      const model = new MeshBuilder.CreateBox("box", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
       model.rotationQuaternion = new Quaternion();
       model.position.y += 0.1;
-      model.bakeCurrentTransformIntoVertices();
-      this.model = model;
 
-      // Add the box to the shadow generator
+      // Create a standard material and apply to the model
+      const material = new StandardMaterial("boxMaterial", scene);
+      material.diffuseColor = new Color3(1, 0, 0); // Red color
+      model.material = material;
+
       this.shadowGenerator.addShadowCaster(model);
-
-      // Ensure the box receives shadows
       model.receiveShadows = true;
+
+      this.model = model;
+    },
+    addGround(scene) {
+      const ground = MeshBuilder.CreateGround("ground", { width: 4, height: 4 }, scene);
+      ground.receiveShadows = true;
+
+      // Create a standard material and apply to the ground
+      const groundMaterial = new StandardMaterial("groundMaterial", scene);
+      groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Grey color
+      ground.material = groundMaterial;
     },
 
     async setupXR(scene) {
