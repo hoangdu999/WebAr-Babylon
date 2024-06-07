@@ -150,8 +150,7 @@ export default {
       ground.receiveShadows = true;
 
       // Tạo vật liệu tiêu chuẩn và áp dụng cho mặt đất
-      const groundMaterial = new StandardMaterial("groundMaterial", scene);
-      groundMaterial.diffuseColor = new Color3(0.5, 0.5, 0.5); // Grey color
+      const groundMaterial = new ShadowOnlyMaterial("groundMaterial", scene);
       ground.material = groundMaterial;
     },
     async setupXR(scene) {
