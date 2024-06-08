@@ -143,7 +143,10 @@ export default {
       model.receiveShadows = true;
 
       this.model = model;
-
+      this.marker = model.clone("marker");
+      this.marker.material = material.clone("markerMaterial");
+      this.marker.material.alpha = 0.5; // Làm mờ hộp khi là marker
+      this.marker.isVisible = false;
     },
     Ground(scene){
       const ground = MeshBuilder.CreateGround('ground', { width: 4, height: 4 }, scene);
@@ -174,20 +177,11 @@ export default {
         xrTest.onHitTestResultObservable.add((results) => {
           if (results.length) {
             this.hitTest = results[0];
-            if (!this.marker) {
-              this.marker = this.loadModel(scene);
-              this.marker.isVisible = true;
-              this.marker.rotationQuaternion = new Quaternion();
-              this.marker.visibility = 0.5; 
-            } else {
-              this.marker.isVisible = true;
-            }
+            this.marker.isVisible = true;
             this.hitTest.transformationMatrix.decompose(this.marker.scaling, this.marker.rotationQuaternion, this.marker.position);
           } else {
             this.hitTest = undefined;
-            if (this.marker) {
-              this.marker.isVisible = false;
-            }
+            this.marker.isVisible = false;
           }
         });
       } catch (e) {
@@ -215,6 +209,8 @@ export default {
           let matrix = this.hitTest.transformationMatrix;
           matrix.decompose(this.model.scaling, this.model.rotationQuaternion, this.model.position);
           this.model.setEnabled(true);
+          this.model.material.alpha = 1; // Đặt hộp hoàn toàn rõ ràng sau khi đặt
+          this.marker.isVisible = false;
         }
       });
   
