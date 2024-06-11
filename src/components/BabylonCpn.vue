@@ -130,22 +130,22 @@ export default {
     },
 
     async loadModel(scene) {
-      // Đường dẫn đến tệp robot.glb
       const modelUrl = "models/robot.glb";
-
       SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
-        const model = meshes[0];
-        model.scaling = new Vector3(0.2, 0.2, 0.2); // Điều chỉnh tỷ lệ nếu cần
-        model.position.y += 0.1;
-
-        this.shadowGenerator.addShadowCaster(model);
-        model.receiveShadows = true;
-
-        this.model = model;
-        this.marker = model.clone("marker");
-        this.marker.material = model.material.clone("markerMaterial");
-        this.marker.material.alpha = 0.5; // Làm mờ hộp khi là marker
-        this.marker.isVisible = false;
+        if (meshes.length > 0) {
+          const model = meshes[0];
+          model.scaling = new Vector3(0.2, 0.2, 0.2);
+          model.position.y += 0.1;
+          this.shadowGenerator.addShadowCaster(model);
+          model.receiveShadows = true;
+          this.model = model;
+          this.marker = model.clone("marker");
+          this.marker.material = model.material.clone("markerMaterial");
+          this.marker.material.alpha = 0.5;
+          this.marker.isVisible = false;
+        } else {
+          console.error("Failed to load the model");
+        }
       });
     },
     Ground(scene) {
