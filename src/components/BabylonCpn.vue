@@ -131,7 +131,7 @@ export default {
 
     async loadModel(scene) {
       // Đường dẫn đến tệp robot.glb
-      const modelUrl = "/model/robot.glb";
+      const modelUrl = "/models/robot.glb";
 
       SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
         const model = meshes[0];
