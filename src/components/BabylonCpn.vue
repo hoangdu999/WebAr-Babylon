@@ -134,7 +134,7 @@ export default {
       SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
         if (meshes.length > 0) {
           const model = meshes[0];
-          model.scaling = new Vector3(0.2, 0.2, 0.2);
+          model.scaling = new Vector3(0.05, 0.05, 0.05);
           model.position.y += 0.1;
           this.shadowGenerator.addShadowCaster(model);
           model.receiveShadows = true;
