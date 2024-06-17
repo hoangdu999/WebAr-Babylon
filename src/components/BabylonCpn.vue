@@ -88,7 +88,7 @@ export default {
 
       this.camera = this.addCamera(scene, canvas);
 
-      // await this.loadModel(scene);
+      await this.loadModel(scene);
       this.Ground(scene);
       await this.setupXR(scene);
       this.createGUIButton();
