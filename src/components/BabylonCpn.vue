@@ -134,16 +134,12 @@ export default {
       SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
         if (meshes.length > 0) {
           const model = meshes[0];
+          model.position = new Vector3(0.5, 0, 0);
           model.scaling = new Vector3(0.05, 0.05, 0.05);
-          model.position.y += 0.1;
           this.shadowGenerator.addShadowCaster(model);
           model.receiveShadows = true;
           this.model = model;
-          // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
           this.marker = model.clone("marker");
-          this.marker.scaling = model.scaling.clone();
-          this.marker.position = model.position.clone();
-          this.marker.rotationQuaternion = model.rotationQuaternion.clone();
           this.marker.material = model.material.clone("markerMaterial");
           this.marker.material.alpha = 0.5;
           this.marker.isVisible = false;
