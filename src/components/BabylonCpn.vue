@@ -135,7 +135,7 @@ export default {
         if (meshes.length > 0) {
           const model = meshes[0];
           model.position = new Vector3(0.5, 0, 0);
-          model.scaling = new Vector3(0.05, 0.05, 0.05);
+          model.scaling._x = model.scaling._x * 2;
           this.shadowGenerator.addShadowCaster(model);
           model.receiveShadows = true;
           this.model = model;
