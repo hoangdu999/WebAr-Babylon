@@ -88,7 +88,7 @@ export default {
 
       this.camera = this.addCamera(scene, canvas);
 
-      await this.loadModel(scene);
+      // await this.loadModel(scene);
       this.Ground(scene);
       await this.setupXR(scene);
       this.createGUIButton();
@@ -139,7 +139,11 @@ export default {
           this.shadowGenerator.addShadowCaster(model);
           model.receiveShadows = true;
           this.model = model;
+          // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
           this.marker = model.clone("marker");
+          this.marker.scaling = model.scaling.clone();
+          this.marker.position = model.position.clone();
+          this.marker.rotationQuaternion = model.rotationQuaternion.clone();
           this.marker.material = model.material.clone("markerMaterial");
           this.marker.material.alpha = 0.5;
           this.marker.isVisible = false;
