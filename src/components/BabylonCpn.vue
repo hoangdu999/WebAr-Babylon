@@ -134,10 +134,9 @@ export default {
       SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
         if (meshes.length > 0) {
           const model = meshes[0];
-          model.rotationQuaternion = new Quaternion();
-          // model.position = new Vector3(0.5, 0, 0);
-          // model.scaling = new Vector3(0.05, 0.05, 0.05);
-
+          model.position = new Vector3(0.5, 0, 0);
+          model.scaling = new Vector3(0.05, 0.05, 0.05);
+          
           console.log(model);
           console.log(model.scaling);
           this.shadowGenerator.addShadowCaster(model);
@@ -189,7 +188,7 @@ export default {
             this.hitTest = results[0];
             this.marker.isVisible = true;
             this.hitTest.transformationMatrix.decompose(
-              this.marker.scaling,
+             // this.marker.scaling,//
               this.marker.rotationQuaternion,
               this.marker.position
             );
@@ -223,7 +222,7 @@ export default {
           let matrix = this.hitTest.transformationMatrix;
           if (this.model) {
             matrix.decompose(
-              this.model.scaling,
+              //this.model.scaling,//
               this.model.rotationQuaternion,
               this.model.position
             );
