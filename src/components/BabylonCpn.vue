@@ -237,20 +237,10 @@ export default {
       guiButton.onPointerUpObservable.add(() => {
         if (this.hitTest) {
           let matrix = this.hitTest.transformationMatrix;
-          if (this.model) {
-            matrix.decompose(
-              //this.model.scaling,//
-              this.model.rotationQuaternion,
-              this.model.position
-            );
-            this.model.setEnabled(true);
-            if (this.model.material) {
-              this.model.material.alpha = 1; // Đặt hộp hoàn toàn rõ ràng sau khi đặt
-            }
-            if (this.marker) {
-              this.marker.isVisible = false;
-            }
-          }
+          matrix.decompose(this.model.scaling, this.model.rotationQuaternion, this.model.position);
+          this.model.setEnabled(true);
+          this.model.material.alpha = 1; // Đặt hộp hoàn toàn rõ ràng sau khi đặt
+          this.marker.isVisible = false;
         }
       });
     },
