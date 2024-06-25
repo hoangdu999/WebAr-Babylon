@@ -50,12 +50,12 @@ export default {
       hitTest: null,
       marker: null,
       planes: [], // Biến để lưu trữ các planes
+      xr: null, // Thêm biến xr vào data
     };
   },
   mounted() {
     this.initializeBabylon();
   },
-
   methods: {
     // Hàm khởi tạo BabylonJS và bắt đầu vòng lặp render
     async initializeBabylon() {
@@ -90,16 +90,16 @@ export default {
 
     // Hàm tạo và cấu hình camera
     createCamera(scene, canvas) {
-      const camera = new FreeCamera("camera1", new Vector3(0, 1, -5), scene);
-      camera.setTarget(Vector3.Zero());
-      camera.attachControl(canvas, true);
-      this.camera = camera;
+      this.camera = new FreeCamera("camera1", new Vector3(0, 1, -5), scene);
+      this.camera.setTarget(Vector3.Zero());
+      this.camera.attachControl(canvas, true);
     },
 
     // Hàm tạo và cấu hình các ánh sáng
     createLights(scene) {
       const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
       light.intensity = 0.7;
+
       const dirLight = new DirectionalLight('dirLight', new Vector3(0, -1, -0.5), scene);
       dirLight.position = new Vector3(0, 5, -5);
     },
@@ -118,7 +118,6 @@ export default {
       const result = await SceneLoader.ImportMeshAsync("", "models/", "robot.glb", scene);
       this.model = result.meshes[0];
       this.model.rotationQuaternion = new Quaternion();
-      this.model.isVisible = false;
       this.shadowGenerator.addShadowCaster(this.model, true);
       this.setupAnimations(scene, result.skeletons[0]);
     },
@@ -129,11 +128,16 @@ export default {
       skeleton.animationPropertiesOverride.enableBlending = true;
       skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
       skeleton.animationPropertiesOverride.loopMode = 1;
-      const firstAnimationRange = skeleton.getAnimationRanges()[0];
-      if (firstAnimationRange) {
-        scene.beginAnimation(skeleton, firstAnimationRange.from, firstAnimationRange.to, true);
+
+      // Tìm hoạt ảnh đầu tiên của bộ xương
+      const animationRanges = skeleton.getAnimationRanges();
+      const firstAnimation = animationRanges.length > 0 ? animationRanges[0] : null;
+
+      if (firstAnimation) {
+        scene.beginAnimation(skeleton, firstAnimation.from, firstAnimation.to, true);
+      } else {
+        this.logMessage("No animations found for the model.");
       }
-      this.model.skeleton = skeleton;
     },
 
     // Hàm tạo marker
@@ -146,7 +150,7 @@ export default {
 
     // Hàm thiết lập WebXR
     async setupXR(scene) {
-      const xr = await scene.createDefaultXRExperienceAsync({
+      this.xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
           sessionMode: "immersive-ar",
           referenceSpaceType: "local-floor"
@@ -154,7 +158,7 @@ export default {
         optionalFeatures: true
       });
 
-      const fm = xr.baseExperience.featuresManager;
+      const fm = this.xr.baseExperience.featuresManager;
 
       const xrTest = fm.enableFeature(WebXRHitTest.Name, "latest");
       const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
@@ -164,11 +168,6 @@ export default {
       this.handleHitTest(xrTest, anchors, scene);
       this.handlePlaneDetection(xrPlanes, scene);
       this.handleAnchors(anchors, scene);
-
-      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-        this.planes.forEach(plane => plane.dispose());
-        this.planes = []; // Gán lại planes là mảng rỗng
-      });
     },
 
     // Hàm xử lý kết quả HitTest
@@ -185,8 +184,8 @@ export default {
         }
       });
 
-      scene.onPointerDown = () => {
-        if (this.hitTest && anchors && scene.xr.baseExperience.state === WebXRState.IN_XR) {
+      scene.onPointerDown = (evt, pickInfo) => {
+        if (this.hitTest && anchors && this.xr.baseExperience.state === WebXRState.IN_XR) {
           anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
         }
       };
@@ -196,15 +195,17 @@ export default {
     handlePlaneDetection(xrPlanes, scene) {
       xrPlanes.onPlaneAddedObservable.add(plane => {
         plane.polygonDefinition.push(plane.polygonDefinition[0]);
-        const polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
-        const polygon = polygon_triangulation.build(false, 0.01);
+        const polygonTriangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
+        const polygon = polygonTriangulation.build(false, 0.01);
         plane.mesh = polygon;
-        this.planes[plane.id] = (plane.mesh);
+        this.planes[plane.id] = plane.mesh;
+
         const mat = new StandardMaterial("mat", scene);
         mat.alpha = 0.5;
         mat.diffuseColor = Color3.Random();
         polygon.createNormals();
         plane.mesh.material = mat;
+
         plane.mesh.rotationQuaternion = new Quaternion();
         plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
       });
@@ -220,11 +221,11 @@ export default {
           return;
         }
         plane.polygonDefinition.push(plane.polygonDefinition[0]);
-        const polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
-        const polygon = polygon_triangulation.build(false, 0.01);
+        const polygonTriangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
+        const polygon = polygonTriangulation.build(false, 0.01);
         polygon.createNormals();
         plane.mesh = polygon;
-        this.planes[plane.id] = (plane.mesh);
+        this.planes[plane.id] = plane.mesh;
         plane.mesh.material = mat;
         plane.mesh.rotationQuaternion = new Quaternion();
         plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
@@ -240,29 +241,28 @@ export default {
 
     // Hàm xử lý anchors
     handleAnchors(anchors, scene) {
-      if (anchors) {
-        console.log('anchors attached');
-        anchors.onAnchorAddedObservable.add(anchor => {
-          console.log('attaching', anchor);
-          this.model.isVisible = true;
-          anchor.attachedNode = this.model.clone("mensch");
-          anchor.attachedNode.skeleton = this.model.skeleton.clone('skelet');
-          this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
-          const firstAnimationRange = anchor.attachedNode.skeleton.getAnimationRanges()[0];
-          if (firstAnimationRange) {
-            scene.beginAnimation(anchor.attachedNode.skeleton, firstAnimationRange.from, firstAnimationRange.to, true);
-          }
-          this.model.isVisible = false;
-        });
+      anchors.onAnchorAddedObservable.add(anchor => {
+        this.model.isVisible = true;
+        const cloneModel = this.model.clone("mensch");
+        cloneModel.skeleton = this.model.skeleton.clone("skelet");
+        this.shadowGenerator.addShadowCaster(cloneModel, true);
 
-        anchors.onAnchorRemovedObservable.add(anchor => {
-          console.log('disposing', anchor);
-          if (anchor) {
-            anchor.attachedNode.isVisible = false;
-            anchor.attachedNode.dispose();
-          }
-        });
-      }
+        const animationRanges = cloneModel.skeleton.getAnimationRanges();
+        const firstAnimation = animationRanges.length > 0 ? animationRanges[0] : null;
+        if (firstAnimation) {
+          scene.beginAnimation(cloneModel.skeleton, firstAnimation.from, firstAnimation.to, true);
+        }
+
+        anchor.attachedNode = cloneModel;
+        this.model.isVisible = false;
+      });
+
+      anchors.onAnchorRemovedObservable.add(anchor => {
+        if (anchor) {
+          anchor.attachedNode.isVisible = false;
+          anchor.attachedNode.dispose();
+        }
+      });
     },
 
     // Hàm ghi log message
