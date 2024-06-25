@@ -28,8 +28,10 @@ import {
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import earcut from "earcut";
+
+// Đảm bảo nhập AdvancedDynamicTexture và Control từ Babylon.js GUI
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
 window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
 
@@ -234,7 +236,11 @@ export default {
             const idleRange = skeleton.getAnimationRange("Idle");
             if (idleRange) {
               this.scene.beginAnimation(skeleton, idleRange.from, idleRange.to, true);
+            } else {
+              console.error("Animation range 'Idle' not found.");
             }
+          } else {
+            console.error("Skeleton not found.");
           }
         }
       });
