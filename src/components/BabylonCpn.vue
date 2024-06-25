@@ -34,6 +34,9 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
+import earcut from "earcut"; // Đảm bảo rằng earcut được nhập vào
+
+window.earcut = earcut; // Đảm bảo rằng earcut có sẵn toàn cầu
 
 export default {
   name: "BabylonCpn",
@@ -260,6 +263,12 @@ export default {
           }
         });
       }
+    },
+
+    // Hàm ghi log message
+    logMessage(message) {
+      const logDiv = document.getElementById("log");
+      logDiv.innerHTML += message + "<br>";
     },
   },
 };
