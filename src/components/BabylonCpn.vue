@@ -13,31 +13,27 @@
 import {
   Engine,
   Scene,
-  ArcRotateCamera,
+  FreeCamera,
   Vector3,
-  Layer,
-  SceneLoader,
-  VideoTexture,
-  ShadowGenerator,
+  HemisphericLight,
   DirectionalLight,
+  ShadowGenerator,
+  SceneLoader,
   MeshBuilder,
+  WebXRHitTest,
   WebXRPlaneDetector,
-  Matrix,
-  Vector2,
+  WebXRAnchorSystem,
+  Quaternion,
   PolygonMeshBuilder,
   StandardMaterial,
   Color3,
-  Quaternion,
-  ActionManager,
-  ExecuteCodeAction,
-  WebXRHitTest,
+  WebXRState,
+  AnimationPropertiesOverride,
   WebXRBackgroundRemover,
+  Vector2
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
-import "@babylonjs/inspector";
-import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import earcut from "earcut";
-import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
 window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
 
@@ -52,6 +48,9 @@ export default {
       model: null,
       hitTest: null,
       marker: null,
+      anchors: null,
+      planes: [], // Khởi tạo mảng planes
+      idleRange: null, // Khởi tạo idleRange
     };
   },
   mounted() {
@@ -89,37 +88,28 @@ export default {
       this.camera = this.addCamera(scene, canvas);
 
       await this.loadModel(scene);
-      this.Ground(scene);
+      this.marker = this.createMarker(scene);
       await this.setupXR(scene);
-      this.createGUIButton();
       return scene;
     },
 
     addLight(scene) {
       scene.lights.forEach((light) => light.dispose());
 
-      var light = new DirectionalLight(
-        "dirLight",
-        new Vector3(-2, -3, 1),
-        scene
-      );
-      light.position = new Vector3(6, 9, 3);
+      var light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
+      light.intensity = 0.7;
 
-      this.shadowGenerator = new ShadowGenerator(1024, light);
+      var dirLight = new DirectionalLight('light', new Vector3(0, -1, -0.5), scene);
+      dirLight.position = new Vector3(0, 5, -5);
+
+      this.shadowGenerator = new ShadowGenerator(1024, dirLight);
       this.shadowGenerator.useBlurExponentialShadowMap = true;
       this.shadowGenerator.blurKernel = 32;
-      this.shadowGenerator.darkness = 0.5; // Điều chỉnh độ tối của bóng đổ
     },
 
     addCamera(scene, canvas) {
-      const camera = new ArcRotateCamera(
-        "Camera",
-        -Math.PI / 2,
-        Math.PI / 2,
-        12,
-        Vector3.Zero(),
-        scene
-      );
+      const camera = new FreeCamera("camera1", new Vector3(0, 1, -5), scene);
+      camera.setTarget(Vector3.Zero());
       camera.attachControl(canvas, true);
       return camera;
     },
@@ -131,59 +121,29 @@ export default {
 
     async loadModel(scene) {
       const modelUrl = "models/robot.glb";
-      SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
-        if (meshes.length > 0) {
-          const model = meshes[0];
-          model.scaling = new Vector3(0.05, 0.05, 0.05);
-          model.position.y += 0.1;
-          this.shadowGenerator.addShadowCaster(model);
-          model.receiveShadows = true;
-          model.rotationQuaternion = new Quaternion();
-          this.model = model;
+      const result = await SceneLoader.ImportMeshAsync("", "", modelUrl, scene);
+      this.model = result.meshes[0];
+      this.model.rotationQuaternion = new Quaternion();
+      this.model.isVisible = false;
+      this.shadowGenerator.addShadowCaster(this.model, true);
 
-          // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
-          this.marker = model.clone("marker");
-          this.marker.scaling = model.scaling.clone();
-          this.marker.position = model.position.clone();
-          this.marker.rotationQuaternion = model.rotationQuaternion.clone();
-          this.marker.material = model.material.clone("markerMaterial");
-          this.marker.material.alpha = 0.5;
-          this.marker.isVisible = false;
-        } else {
-          console.error("Failed to load the model");
-        }
-      });
+      var skeleton = result.skeletons[0];
+      skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
+      skeleton.animationPropertiesOverride.enableBlending = true;
+      skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
+      skeleton.animationPropertiesOverride.loopMode = 1;
 
-      //   const model = new MeshBuilder.CreateBox("box", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
-      //   model.rotationQuaternion = new Quaternion();
-      //   model.position.y += 0.1;
-
-      //  // Tạo vật liệu chuẩn và áp dụng cho mô hình
-      //   const material = new StandardMaterial("boxMaterial", scene);
-      //   material.diffuseColor = new Color3(1, 0, 0); // Red color
-      //   model.material = material;
-
-      //   this.shadowGenerator.addShadowCaster(model);
-      //   model.receiveShadows = true;
-
-      //   this.model = model;
-      //   this.marker = model.clone("marker");
-      //   this.marker.material = material.clone("markerMaterial");
-      //   this.marker.material.alpha = 0.5; // Làm mờ hộp khi là marker
-      //   this.marker.isVisible = false;
+      this.idleRange = skeleton.getAnimationRange("YBot_Idle");
+      scene.beginAnimation(skeleton, this.idleRange.from, this.idleRange.to, true);
     },
-    Ground(scene) {
-      const ground = MeshBuilder.CreateGround(
-        "ground",
-        { width: 4, height: 4 },
-        scene
-      );
-      ground.receiveShadows = true;
 
-      // Tạo vật liệu tiêu chuẩn và áp dụng cho mặt đất
-      const groundMaterial = new ShadowOnlyMaterial("groundMaterial", scene);
-      ground.material = groundMaterial;
+    createMarker(scene) {
+      const marker = MeshBuilder.CreateTorus('marker', { diameter: 0.15, thickness: 0.05 }, scene);
+      marker.isVisible = false;
+      marker.rotationQuaternion = new Quaternion();
+      return marker;
     },
+
     async setupXR(scene) {
       try {
         const xr = await scene.createDefaultXRExperienceAsync({
@@ -195,79 +155,111 @@ export default {
         });
 
         const fm = xr.baseExperience.featuresManager;
-        const xrTest = fm.enableFeature(WebXRHitTest, "latest");
-        const xrBackgroundRemover = fm.enableFeature(
-          WebXRBackgroundRemover.Name
-        );
+
+        this.hitTest = fm.enableFeature(WebXRHitTest.Name, "latest");
+        const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
+        this.anchors = fm.enableFeature(WebXRAnchorSystem.Name, 'latest');
+        const xrBackgroundRemover = fm.enableFeature(WebXRBackgroundRemover.Name);
+
+        this.setupHitTestObserver();
+        this.setupAnchors(scene);
+        this.setupPlaneDetection(xrPlanes, scene);
 
         xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
-          this.model.setEnabled(false);
+          this.clearPlanes();
         });
 
-        xrTest.onHitTestResultObservable.add((results) => {
-          if (results.length) {
-            this.hitTest = results[0];
-            this.marker.isVisible = true;
-
-            console.log("Marker scaling:", this.marker.scaling);
-            console.log(
-              "Marker rotationQuaternion:",
-              this.marker.rotationQuaternion
-            );
-            console.log("Marker position:", this.marker.position);
-
-            this.hitTest.transformationMatrix.decompose(
-              this.marker.scaling,
-              this.marker.rotationQuaternion,
-              this.marker.position
-            );
-          } else {
-            this.hitTest = undefined;
-            this.marker.isVisible = false;
+        scene.onPointerDown = (evt, pickInfo) => {
+          if (this.hitTest && this.anchors && xr.baseExperience.state === WebXRState.IN_XR) {
+            this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
           }
-        });
+        };
       } catch (e) {
         console.error(e);
         this.logMessage("WebXR Plane Detector not supported: " + e);
       }
     },
 
-    createGUIButton() {
-      let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-      let guiButton = Button.CreateSimpleButton("guiButton", "Place");
-      guiButton.width = "300px";
-      guiButton.height = "100px";
-      guiButton.color = "white";
-      guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 5;
-      guiButton.background = "black";
-      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.top = "-100px";
-      guiCanvas.addControl(guiButton);
-
-      guiButton.onPointerUpObservable.add(() => {
-        if (this.hitTest) {
-          let matrix = this.hitTest.transformationMatrix;
-          console.log("model scaling:", this.model.scaling);
-          console.log(
-            "model rotationQuaternion:",
-            this.model.rotationQuaternion
-          );
-          console.log("model position:", this.model.position);
-
-          matrix.decompose(
-            this.model.scaling,
-            this.model.rotationQuaternion,
-            this.model.position
-          );
-          this.model.setEnabled(true);
-          this.model.material.alpha = 1; // Đặt hộp hoàn toàn rõ ràng sau khi đặt
+    setupHitTestObserver() {
+      this.hitTest.onHitTestResultObservable.add((results) => {
+        if (results.length) {
+          this.marker.isVisible = true;
+          this.hitTest = results[0];
+          this.hitTest.transformationMatrix.decompose(undefined, this.model.rotationQuaternion, this.model.position);
+          this.hitTest.transformationMatrix.decompose(undefined, this.marker.rotationQuaternion, this.marker.position);
+        } else {
           this.marker.isVisible = false;
+          this.hitTest = undefined;
         }
       });
     },
-  },
+
+    setupAnchors(scene) {
+      if (this.anchors) {
+        this.anchors.onAnchorAddedObservable.add(anchor => {
+          this.model.isVisible = true;
+          anchor.attachedNode = this.model.clone("modelClone");
+          anchor.attachedNode.skeleton = this.model.skeleton.clone('skeletonClone');
+          this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
+          scene.beginAnimation(anchor.attachedNode.skeleton, this.idleRange.from, this.idleRange.to, true);
+          this.model.isVisible = false;
+        });
+
+        this.anchors.onAnchorRemovedObservable.add(anchor => {
+          if (anchor) {
+            anchor.attachedNode.isVisible = false;
+            anchor.attachedNode.dispose();
+          }
+        });
+      }
+    },
+
+    setupPlaneDetection(xrPlanes, scene) {
+      xrPlanes.onPlaneAddedObservable.add(plane => {
+        plane.polygonDefinition.push(plane.polygonDefinition[0]);
+        var polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
+        var polygon = polygon_triangulation.build(false, 0.01);
+        plane.mesh = polygon;
+        this.planes[plane.id] = (plane.mesh);
+        const mat = new StandardMaterial("mat", scene);
+        mat.alpha = 0.5;
+        mat.diffuseColor = Color3.Random();
+        polygon.createNormals();
+        plane.mesh.material = mat;
+        plane.mesh.rotationQuaternion = new Quaternion();
+        plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
+      });
+
+      xrPlanes.onPlaneUpdatedObservable.add(plane => {
+        let mat;
+        if (plane.mesh) {
+          mat = plane.mesh.material;
+          plane.mesh.dispose(false, false);
+        }
+        plane.polygonDefinition.push(plane.polygonDefinition[0]);
+        var polygon_triangulation = new PolygonMeshBuilder("name", plane.polygonDefinition.map((p) => new Vector2(p.x, p.z)), scene);
+        var polygon = polygon_triangulation.build(false, 0.01);
+        polygon.createNormals();
+        plane.mesh = polygon;
+        this.planes[plane.id] = (plane.mesh);
+        plane.mesh.material = mat;
+        plane.mesh.rotationQuaternion = new Quaternion();
+        plane.transformationMatrix.decompose(plane.mesh.scaling, plane.mesh.rotationQuaternion, plane.mesh.position);
+        plane.mesh.receiveShadows = true;
+      });
+
+      xrPlanes.onPlaneRemovedObservable.add(plane => {
+        if (plane && this.planes[plane.id]) {
+          this.planes[plane.id].dispose();
+        }
+      });
+    },
+
+    clearPlanes() {
+      this.planes.forEach(plane => plane.dispose());
+      this.planes = [];
+    }
+  }
 };
 </script>
 
