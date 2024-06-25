@@ -138,7 +138,9 @@ export default {
           model.position.y += 0.1;
           this.shadowGenerator.addShadowCaster(model);
           model.receiveShadows = true;
+          model.rotationQuaternion = new Quaternion();
           this.model = model;
+          
           // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
           this.marker = model.clone("marker");
           this.marker.scaling = model.scaling.clone();
