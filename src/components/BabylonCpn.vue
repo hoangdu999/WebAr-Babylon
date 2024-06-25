@@ -30,7 +30,10 @@ import {
   WebXRState,
   AnimationPropertiesOverride,
   WebXRBackgroundRemover,
-  Vector2
+  Vector2,
+  AdvancedDynamicTexture,
+  Button,
+  Control
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import earcut from "earcut";
@@ -88,8 +91,8 @@ export default {
       this.camera = this.addCamera(scene, canvas);
 
       await this.loadModel(scene);
-      this.marker = this.createMarker(scene);
       await this.setupXR(scene);
+      this.createGUIButton();
       return scene;
     },
 
@@ -135,17 +138,13 @@ export default {
 
       if (skeleton.getAnimationRanges().length > 0) {
         this.idleRange = skeleton.getAnimationRanges()[0];
-        scene.beginAnimation(skeleton, this.idleRange.from, this.idleRange.to, true);
       } else {
         this.logMessage("No animation ranges found.");
       }
-    },
 
-    createMarker(scene) {
-      const marker = MeshBuilder.CreateTorus('marker', { diameter: 0.15, thickness: 0.05 }, scene);
-      marker.isVisible = false;
-      marker.rotationQuaternion = new Quaternion();
-      return marker;
+      // Gán mô hình robot làm marker
+      this.marker = this.model;
+      this.marker.isVisible = true;
     },
 
     async setupXR(scene) {
@@ -201,14 +200,13 @@ export default {
     setupAnchors(scene) {
       if (this.anchors) {
         this.anchors.onAnchorAddedObservable.add(anchor => {
-          this.model.isVisible = true;
           anchor.attachedNode = this.model.clone("modelClone");
           anchor.attachedNode.skeleton = this.model.skeleton.clone('skeletonClone');
           this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
           if (this.idleRange) {
             scene.beginAnimation(anchor.attachedNode.skeleton, this.idleRange.from, this.idleRange.to, true);
           }
-          this.model.isVisible = false;
+          this.marker.isVisible = false;
         });
 
         this.anchors.onAnchorRemovedObservable.add(anchor => {
@@ -264,6 +262,36 @@ export default {
     clearPlanes() {
       this.planes.forEach(plane => plane.dispose());
       this.planes = [];
+    },
+
+    createGUIButton() {
+      let guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      let guiButton = Button.CreateSimpleButton("guiButton", "Place");
+      guiButton.width = "300px";
+      guiButton.height = "100px";
+      guiButton.color = "white";
+      guiButton.fontSize = "24px";
+      guiButton.cornerRadius = 5;
+      guiButton.background = "black";
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      guiButton.top = "-100px";
+      guiCanvas.addControl(guiButton);
+
+      guiButton.onPointerUpObservable.add(() => {
+        if (this.hitTest) {
+          let matrix = this.hitTest.transformationMatrix;
+          matrix.decompose(this.model.scaling, this.model.rotationQuaternion, this.model.position);
+          this.model.setEnabled(true);
+          this.model.material.alpha = 1;
+          this.marker.isVisible = false;
+
+          // Bắt đầu hoạt ảnh đầu tiên
+          if (this.idleRange) {
+            this.scene.beginAnimation(this.model.skeleton, this.idleRange.from, this.idleRange.to, true);
+          }
+        }
+      });
     }
   }
 };
