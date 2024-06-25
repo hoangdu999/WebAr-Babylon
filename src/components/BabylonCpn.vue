@@ -23,14 +23,12 @@ import {
   WebXRBackgroundRemover,
   StandardMaterial,
   Color3,
-  AdvancedDynamicTexture,
   AnimationPropertiesOverride,
-  Button,
-  Control,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import earcut from "earcut";
 
 window.earcut = earcut; // Đảm bảo earcut có sẵn toàn cầu
