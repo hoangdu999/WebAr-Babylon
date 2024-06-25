@@ -30,11 +30,9 @@ import {
   WebXRState,
   AnimationPropertiesOverride,
   WebXRBackgroundRemover,
-  Vector2,
-  AdvancedDynamicTexture,
-  Button,
-  Control
+  Vector2
 } from "@babylonjs/core";
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import "@babylonjs/loaders";
 import earcut from "earcut";
 
