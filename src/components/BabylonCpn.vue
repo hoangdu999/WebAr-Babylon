@@ -133,8 +133,12 @@ export default {
       skeleton.animationPropertiesOverride.blendingSpeed = 0.05;
       skeleton.animationPropertiesOverride.loopMode = 1;
 
-      this.idleRange = skeleton.getAnimationRange("YBot_Idle");
-      scene.beginAnimation(skeleton, this.idleRange.from, this.idleRange.to, true);
+      if (skeleton.getAnimationRanges().length > 0) {
+        this.idleRange = skeleton.getAnimationRanges()[0];
+        scene.beginAnimation(skeleton, this.idleRange.from, this.idleRange.to, true);
+      } else {
+        this.logMessage("No animation ranges found.");
+      }
     },
 
     createMarker(scene) {
@@ -201,7 +205,9 @@ export default {
           anchor.attachedNode = this.model.clone("modelClone");
           anchor.attachedNode.skeleton = this.model.skeleton.clone('skeletonClone');
           this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
-          scene.beginAnimation(anchor.attachedNode.skeleton, this.idleRange.from, this.idleRange.to, true);
+          if (this.idleRange) {
+            scene.beginAnimation(anchor.attachedNode.skeleton, this.idleRange.from, this.idleRange.to, true);
+          }
           this.model.isVisible = false;
         });
 
