@@ -188,7 +188,7 @@ export default {
             this.hitTest = results[0];
             this.marker.isVisible = true;
             this.hitTest.transformationMatrix.decompose(
-             // this.marker.scaling,//
+             this.marker.scaling,
               this.marker.rotationQuaternion,
               this.marker.position
             );
