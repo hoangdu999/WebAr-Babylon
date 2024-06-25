@@ -97,13 +97,13 @@ export default {
     createLights(scene) {
       const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
       light.intensity = 0.7;
-      const dirLight = new DirectionalLight('light', new Vector3(0, -1, -0.5), scene);
+      const dirLight = new DirectionalLight('dirLight', new Vector3(0, -1, -0.5), scene);
       dirLight.position = new Vector3(0, 5, -5);
     },
 
     // Hàm tạo và cấu hình shadow generator
     createShadowGenerator(scene) {
-      const dirLight = scene.getLightByName('light');
+      const dirLight = scene.getLightByName('dirLight');
       const shadowGenerator = new ShadowGenerator(1024, dirLight);
       shadowGenerator.useBlurExponentialShadowMap = true;
       shadowGenerator.blurKernel = 32;
