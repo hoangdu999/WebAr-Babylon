@@ -130,29 +130,43 @@ export default {
     },
 
     async loadModel(scene) {
-      const modelUrl = "models/robot.glb";
-      SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
-        if (meshes.length > 0) {
-          const model = meshes[0];
-          model.scaling = new Vector3(0.05, 0.05, 0.05);
-          model.position.y += 0.1;
-          this.shadowGenerator.addShadowCaster(model);
-          model.receiveShadows = true;
-          model.rotationQuaternion = new Quaternion();
-          this.model = model;
+      // const modelUrl = "models/robot.glb";
+      // SceneLoader.ImportMesh("", "", modelUrl, scene, (meshes) => {
+      //   if (meshes.length > 0) {
+      //     const model = meshes[0];
+      //     model.scaling = new Vector3(0.05, 0.05, 0.05);
+      //     model.position.y += 0.1;
+      //     this.shadowGenerator.addShadowCaster(model);
+      //     model.receiveShadows = true;
+      //     model.rotationQuaternion = new Quaternion();
+      //     this.model = model;
           
-          // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
-          this.marker = model.clone("marker");
-          this.marker.scaling = model.scaling.clone();
-          this.marker.position = model.position.clone();
-          this.marker.rotationQuaternion = model.rotationQuaternion.clone();
-          this.marker.material = model.material.clone("markerMaterial");
-          this.marker.material.alpha = 0.5;
-          this.marker.isVisible = false;
-        } else {
-          console.error("Failed to load the model");
-        }
-      });
+      //     // Tạo marker và áp dụng tất cả các thuộc tính từ mô hình ban đầu
+      //     this.marker = model.clone("marker");
+      //     this.marker.scaling = model.scaling.clone();
+      //     this.marker.position = model.position.clone();
+      //     this.marker.rotationQuaternion = model.rotationQuaternion.clone();
+      //     this.marker.material = model.material.clone("markerMaterial");
+      //     this.marker.material.alpha = 0.5;
+      //     this.marker.isVisible = false;
+      //   } else {
+      //     console.error("Failed to load the model");
+      //   }
+      // });
+      const model = new MeshBuilder.CreateBox("box", { width: 0.2, height: 0.2, depth: 0.2 }, scene);
+      model.rotationQuaternion = new Quaternion();
+      model.position.y += 0.1;
+     // Tạo vật liệu chuẩn và áp dụng cho mô hình
+      const material = new StandardMaterial("boxMaterial", scene);
+      material.diffuseColor = new Color3(1, 0, 0); // Red color
+      model.material = material;
+      this.shadowGenerator.addShadowCaster(model);
+      model.receiveShadows = true;
+      this.model = model;
+      this.marker = model.clone("marker");
+      this.marker.material = material.clone("markerMaterial");
+      this.marker.material.alpha = 0.5; // Làm mờ hộp khi là marker
+      this.marker.isVisible = false;
     },
     Ground(scene) {
       const ground = MeshBuilder.CreateGround(
