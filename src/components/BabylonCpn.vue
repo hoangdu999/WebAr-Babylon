@@ -30,14 +30,12 @@ import {
   WebXRBackgroundRemover,
   WebXRState,
   Vector2,
-  AnimationPropertiesOverride,
-  AdvancedDynamicTexture,
-  Button,
-  Control,
+  AnimationPropertiesOverride
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import earcut from "earcut";
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
 // Make earcut available globally
 window.earcut = earcut;
