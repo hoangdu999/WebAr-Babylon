@@ -87,6 +87,7 @@ export default {
 
       this.model = await this.loadModel(scene); // Load the 3D model
       this.marker = this.createMarker(scene); // Create the marker for AR
+      this.createGround(scene); // Create ground to receive shadows
       await this.setupXR(scene); // Set up WebXR
 
       return scene;
@@ -106,6 +107,12 @@ export default {
 
       const dirLight = new DirectionalLight("dirLight", new Vector3(0, -1, -0.5), scene);
       dirLight.position = new Vector3(0, 5, -5);
+      dirLight.shadowMinZ = 1;
+      dirLight.shadowMaxZ = 100;
+
+      this.shadowGenerator = new ShadowGenerator(1024, dirLight);
+      this.shadowGenerator.useBlurExponentialShadowMap = true;
+      this.shadowGenerator.blurKernel = 32;
     },
 
     // Create and configure the shadow generator
@@ -114,6 +121,15 @@ export default {
       this.shadowGenerator = new ShadowGenerator(1024, dirLight);
       this.shadowGenerator.useBlurExponentialShadowMap = true;
       this.shadowGenerator.blurKernel = 32;
+    },
+
+    // Create the ground to receive shadows
+    createGround(scene) {
+      const ground = MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+      const groundMaterial = new StandardMaterial("groundMaterial", scene);
+      groundMaterial.diffuseColor = new Color3(1, 1, 1);
+      ground.material = groundMaterial;
+      ground.receiveShadows = true;
     },
 
     // Load the 3D model and configure its properties
