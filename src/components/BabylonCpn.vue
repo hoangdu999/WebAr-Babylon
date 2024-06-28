@@ -30,7 +30,7 @@ import {
   WebXRBackgroundRemover,
   WebXRState,
   Vector2,
-  AnimationPropertiesOverride
+  AnimationPropertiesOverride,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
@@ -53,6 +53,7 @@ export default {
       marker: null, // Marker for indicating placement in AR
       xr: null, // XR experience
       anchors: null, // Anchor system
+      currentModel: null, // Reference to the currently placed model
     };
   },
   mounted() {
@@ -237,6 +238,9 @@ export default {
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
+          if (this.currentModel) {
+            this.currentModel.dispose(); // Dispose the previous model if it exists
+          }
           const cloneModel = this.model.clone("mensch");
           cloneModel.isVisible = true;
           anchor.attachedNode = cloneModel;
@@ -244,6 +248,8 @@ export default {
           this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
           scene.beginAnimation(anchor.attachedNode.skeleton, this.model.skeleton.getAnimationRange("YBot_Idle").from, this.model.skeleton.getAnimationRange("YBot_Idle").to, true);
           this.model.isVisible = false;
+
+          this.currentModel = anchor.attachedNode; // Update the reference to the current model
         });
 
         anchors.onAnchorRemovedObservable.add((anchor) => {
