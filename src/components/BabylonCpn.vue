@@ -109,6 +109,9 @@ export default {
 
       const dirLight = new DirectionalLight("dirLight", new Vector3(0, -1, -0.5), scene);
       dirLight.position = new Vector3(0, 5, -5);
+      this.shadowGenerator = new ShadowGenerator(1024, light);
+      this.shadowGenerator.useBlurExponentialShadowMap = true;
+      this.shadowGenerator.darkness = 0.5; // Điều chỉnh độ tối của bóng đổ
     },
 
     // Create and configure the shadow generator
@@ -124,9 +127,11 @@ export default {
       const result = await SceneLoader.ImportMeshAsync("", "models/", "dummy3.babylon", scene);
       const model = result.meshes[0];
       model.rotationQuaternion = new Quaternion();
-      this.shadowGenerator.addShadowCaster(model, true);
-      model.isVisible = false;
 
+      this.shadowGenerator.addShadowCaster(model);
+      model.receiveShadows = true;
+
+      model.isVisible = false;
       const skeleton = result.skeletons[0];
       this.setupAnimations(scene, skeleton); // Set up animations for the model
 
