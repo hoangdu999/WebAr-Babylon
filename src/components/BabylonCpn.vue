@@ -31,10 +31,11 @@ import {
   WebXRState,
   Vector2,
   AnimationPropertiesOverride,
-  ShadowOnlyMaterial
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
+import { ShadowOnlyMaterial } from "@babylonjs/materials";
+
 import earcut from "earcut";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 
