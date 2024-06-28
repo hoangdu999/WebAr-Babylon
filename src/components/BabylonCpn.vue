@@ -30,12 +30,12 @@ import {
   WebXRBackgroundRemover,
   WebXRState,
   Vector2,
-  AnimationPropertiesOverride,
+  AnimationPropertiesOverride
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import earcut from "earcut";
-
+import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 // Make earcut available globally
 window.earcut = earcut;
 
@@ -178,21 +178,17 @@ export default {
 
       this.handleAnchors(anchors, scene); // Handle anchor creation and management
 
-      // Handle pointer down event to place the model in AR
-      scene.onPointerDown = () => {
-        if (this.hitTest && anchors && xr.baseExperience.state === WebXRState.IN_XR) {
-          anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
-        }
-      };
+      // Create and configure the GUI button
+      this.createGUIButton();
 
       const planes = [];
 
       xrPlanes.onPlaneAddedObservable.add((plane) => {
-            // Handle plane detection and rendering
+        // Handle plane detection and rendering
       });
 
       xrPlanes.onPlaneUpdatedObservable.add((plane) => {
-              // Update detected planes
+        // Update detected planes
       });
 
       // Remove detected planes
@@ -210,6 +206,27 @@ export default {
           // Removed a plane
         }
       });
+    },
+
+    // Create and configure the GUI button
+    createGUIButton() {
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      const guiButton = Button.CreateSimpleButton("guiButton", "Place");
+      guiButton.width = "300px";
+      guiButton.height = "100px";
+      guiButton.color = "white";
+      guiButton.fontSize = "24px";
+      guiButton.cornerRadius = 5;
+      guiButton.background = "black";
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      guiButton.top = "-100px";
+
+      guiButton.onPointerUpObservable.add(() => {
+        this.placeModel();
+      });
+
+      guiCanvas.addControl(guiButton);
     },
 
     // Handle anchor creation and management
@@ -231,6 +248,13 @@ export default {
             anchor.attachedNode.dispose();
           }
         });
+      }
+    },
+
+    // Place the model at the hit test result
+    placeModel() {
+      if (this.hitTest && this.xr.baseExperience.state === WebXRState.IN_XR) {
+        this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
       }
     },
   },
