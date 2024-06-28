@@ -30,12 +30,15 @@ import {
   WebXRBackgroundRemover,
   WebXRState,
   Vector2,
-  AnimationPropertiesOverride
+  AnimationPropertiesOverride,
+  AdvancedDynamicTexture,
+  Button,
+  Control,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import "@babylonjs/inspector";
 import earcut from "earcut";
-import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
+
 // Make earcut available globally
 window.earcut = earcut;
 
@@ -50,6 +53,8 @@ export default {
       model: null, // Loaded 3D model
       hitTest: null, // Hit test result for AR
       marker: null, // Marker for indicating placement in AR
+      xr: null, // XR experience
+      anchors: null, // Anchor system
     };
   },
   mounted() {
@@ -147,7 +152,7 @@ export default {
 
     // Set up WebXR
     async setupXR(scene) {
-      const xr = await scene.createDefaultXRExperienceAsync({
+      this.xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
           sessionMode: "immersive-ar",
           referenceSpaceType: "local-floor",
@@ -155,12 +160,12 @@ export default {
         optionalFeatures: true,
       });
 
-      const fm = xr.baseExperience.featuresManager;
+      const fm = this.xr.baseExperience.featuresManager;
 
       // Enable WebXR features
       const xrTest = fm.enableFeature(WebXRHitTest.Name, "latest");
       const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
-      const anchors = fm.enableFeature(WebXRAnchorSystem.Name, "latest");
+      this.anchors = fm.enableFeature(WebXRAnchorSystem.Name, "latest");
       const xrBackgroundRemover = fm.enableFeature(WebXRBackgroundRemover.Name);
 
       // Handle hit test results
@@ -176,7 +181,7 @@ export default {
         }
       });
 
-      this.handleAnchors(anchors, scene); // Handle anchor creation and management
+      this.handleAnchors(this.anchors, scene); // Handle anchor creation and management
 
       // Create and configure the GUI button
       this.createGUIButton();
@@ -199,7 +204,7 @@ export default {
       });
 
       // Clean up detected planes when the XR session is initialized
-      xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
+      this.xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
         planes.forEach((plane) => plane.dispose());
         // Use a comment to avoid the empty block error
         while (planes.pop()) {
@@ -211,6 +216,7 @@ export default {
     // Create and configure the GUI button
     createGUIButton() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
