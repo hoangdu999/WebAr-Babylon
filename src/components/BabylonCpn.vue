@@ -142,6 +142,7 @@ export default {
       model.receiveShadows = true;
 
       model.isVisible = false;
+      model.scaling = new Vector3(0.5, 0.5, 0.5); 
       const skeleton = result.skeletons[0];
       this.setupAnimations(scene, skeleton); // Set up animations for the model
 
@@ -284,6 +285,7 @@ export default {
           }
           const cloneModel = this.model.clone("mensch");
           cloneModel.isVisible = true;
+          cloneModel.scaling = new Vector3(0.5, 0.5, 0.5);
           anchor.attachedNode = cloneModel;
           anchor.attachedNode.skeleton = this.model.skeleton.clone("skelet");
           this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
