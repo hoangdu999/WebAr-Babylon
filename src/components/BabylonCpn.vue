@@ -85,7 +85,7 @@ export default {
 
       this.createCamera(scene, canvas); // Create and configure the camera
       this.createLights(scene); // Create and configure lights
-      this.createShadowGenerator(scene); // Create and configure shadow generator
+      // this.createShadowGenerator(scene); // Create and configure shadow generator
 
       this.model = await this.loadModel(scene); // Load the 3D model
       this.Ground(scene);
@@ -104,27 +104,37 @@ export default {
 
     // Create and configure lights
     createLights(scene) {
-      const light = new HemisphericLight("light", new Vector3(0, 1, 0), scene);
-      light.intensity = 0.7;
+      scene.lights.forEach((light) => light.dispose());
 
-      const dirLight = new DirectionalLight("dirLight", new Vector3(0, -1, -0.5), scene);
-      dirLight.position = new Vector3(0, 5, -5);
+      var light = new DirectionalLight(
+        "dirLight",
+        new Vector3(-2, -3, 1),
+        scene
+      );
+      light.position = new Vector3(6, 9, 3);
+
       this.shadowGenerator = new ShadowGenerator(1024, light);
       this.shadowGenerator.useBlurExponentialShadowMap = true;
+      this.shadowGenerator.blurKernel = 32;
       this.shadowGenerator.darkness = 0.5; // Điều chỉnh độ tối của bóng đổ
     },
 
     // Create and configure the shadow generator
-    createShadowGenerator(scene) {
-      const dirLight = scene.lights.find(light => light.name === "dirLight");
-      this.shadowGenerator = new ShadowGenerator(1024, dirLight);
-      this.shadowGenerator.useBlurExponentialShadowMap = true;
-      this.shadowGenerator.blurKernel = 32;
-    },
+    // createShadowGenerator(scene) {
+    //   const dirLight = scene.lights.find((light) => light.name === "dirLight");
+    //   this.shadowGenerator = new ShadowGenerator(1024, dirLight);
+    //   this.shadowGenerator.useBlurExponentialShadowMap = true;
+    //   this.shadowGenerator.blurKernel = 32;
+    // },
 
     // Load the 3D model and configure its properties
     async loadModel(scene) {
-      const result = await SceneLoader.ImportMeshAsync("", "models/", "dummy3.babylon", scene);
+      const result = await SceneLoader.ImportMeshAsync(
+        "",
+        "models/",
+        "dummy3.babylon",
+        scene
+      );
       const model = result.meshes[0];
       model.rotationQuaternion = new Quaternion();
 
@@ -137,8 +147,12 @@ export default {
 
       return model;
     },
-    Ground(scene){
-      const ground = MeshBuilder.CreateGround('ground', { width: 4, height: 4 }, scene);
+    Ground(scene) {
+      const ground = MeshBuilder.CreateGround(
+        "ground",
+        { width: 4, height: 4 },
+        scene
+      );
       ground.receiveShadows = true;
 
       // Tạo vật liệu tiêu chuẩn và áp dụng cho mặt đất
@@ -158,7 +172,11 @@ export default {
 
     // Create the marker for AR
     createMarker(scene) {
-      const marker = MeshBuilder.CreateTorus("marker", { diameter: 0.15, thickness: 0.05 }, scene);
+      const marker = MeshBuilder.CreateTorus(
+        "marker",
+        { diameter: 0.15, thickness: 0.05 },
+        scene
+      );
       marker.isVisible = false;
       marker.rotationQuaternion = new Quaternion();
       return marker;
@@ -187,8 +205,16 @@ export default {
         if (results.length) {
           this.marker.isVisible = true;
           this.hitTest = results[0];
-          this.hitTest.transformationMatrix.decompose(undefined, this.model.rotationQuaternion, this.model.position);
-          this.hitTest.transformationMatrix.decompose(undefined, this.marker.rotationQuaternion, this.marker.position);
+          this.hitTest.transformationMatrix.decompose(
+            undefined,
+            this.model.rotationQuaternion,
+            this.model.position
+          );
+          this.hitTest.transformationMatrix.decompose(
+            undefined,
+            this.marker.rotationQuaternion,
+            this.marker.position
+          );
         } else {
           this.marker.isVisible = false;
           this.hitTest = undefined;
@@ -261,7 +287,12 @@ export default {
           anchor.attachedNode = cloneModel;
           anchor.attachedNode.skeleton = this.model.skeleton.clone("skelet");
           this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
-          scene.beginAnimation(anchor.attachedNode.skeleton, this.model.skeleton.getAnimationRange("YBot_Idle").from, this.model.skeleton.getAnimationRange("YBot_Idle").to, true);
+          scene.beginAnimation(
+            anchor.attachedNode.skeleton,
+            this.model.skeleton.getAnimationRange("YBot_Idle").from,
+            this.model.skeleton.getAnimationRange("YBot_Idle").to,
+            true
+          );
           this.model.isVisible = false;
 
           this.currentModel = anchor.attachedNode; // Update the reference to the current model
