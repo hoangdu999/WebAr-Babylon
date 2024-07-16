@@ -142,9 +142,7 @@ export default {
       model.receiveShadows = true;
 
       model.isVisible = false;
-      model.meshes.forEach(mesh => {
-        mesh.scaling = new Vector3(0.5, 0.5, 0.5); // Adjust the scale values as needed
-    });
+      model.scaling = new Vector3(0.5, 0.5, 0.5); 
       const skeleton = result.skeletons[0];
       this.setupAnimations(scene, skeleton); // Set up animations for the model
 
