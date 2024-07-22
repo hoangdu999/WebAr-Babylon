@@ -7,7 +7,6 @@
       style="width: 100%; height: 100%"
     ></canvas>
     <!-- Nút để bật micro -->
-    <button id="microButton" @click="toggleMicrophone">Toggle Microphone</button>
   </div>
 </template>
 
@@ -168,7 +167,7 @@ export default {
 
       this.handleAnchors(this.anchors, scene);
       this.createGUIButton();
-
+      this.createGUIButtonMicro();
       const planes = [];
 
       xrPlanes.onPlaneAddedObservable.add((plane) => {
@@ -212,6 +211,48 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
+    createGUIButtonMicro() {
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+      const guiButton = Button.CreateSimpleButton("microButton", "Hold to Listen");
+      guiButton.width = "300px";
+      guiButton.height = "100px";
+      guiButton.color = "white";
+      guiButton.fontSize = "24px";
+      guiButton.cornerRadius = 5;
+      guiButton.background = "black";
+      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      guiButton.top = "-300px";
+
+      guiButton.onPointerDownObservable.add(() => {
+        this.startMicrophone();
+      });
+
+      guiButton.onPointerUpObservable.add(() => {
+        this.stopMicrophone();
+      });
+
+      guiCanvas.addControl(guiButton);
+    },
+    async startMicrophone() {
+      try {
+        this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
+        microphoneSource.connect(this.audioContext.destination);
+        console.log('Microphone started');
+      } catch (error) {
+        console.error('Error accessing the microphone:', error);
+      }
+    },
+    stopMicrophone() {
+      if (this.microphoneStream) {
+        this.microphoneStream.getTracks().forEach(track => track.stop());
+        this.microphoneStream = null;
+        console.log('Microphone stopped');
+      }
+    },
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
@@ -248,26 +289,6 @@ export default {
         this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
       }
     },
-    // Function to toggle microphone
-    async toggleMicrophone() {
-      if (this.microphoneStream) {
-        // Stop the microphone
-        this.microphoneStream.getTracks().forEach(track => track.stop());
-        this.microphoneStream = null;
-        console.log('Microphone stopped');
-      } else {
-        try {
-          // Start the microphone
-          this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-          microphoneSource.connect(this.audioContext.destination);
-          console.log('Microphone started');
-        } catch (error) {
-          console.error('Error accessing the microphone:', error);
-        }
-      }
-    },
   },
 };
 </script>
@@ -280,19 +301,5 @@ body {
 canvas {
   width: 100%;
   height: 100%;
-}
-button {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  padding: 10px 20px;
-  background-color: #000;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-}
-button:hover {
-  background-color: #333;
 }
 </style>
