@@ -21,10 +21,10 @@ import {
   SceneLoader,
   MeshBuilder,
   Quaternion,
-  ShadowOnlyMaterial,
   AnimationPropertiesOverride,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
+import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 
@@ -227,15 +227,12 @@ export default {
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       guiButton.left = "160px"; // Đặt nút ở bên phải nút "Place"
       guiButton.top = "-100px";
-
       guiButton.onPointerDownObservable.add(() => {
         this.startMicrophone();
       });
-
       guiButton.onPointerUpObservable.add(() => {
         this.stopMicrophone();
       });
-
       guiCanvas.addControl(guiButton);
     },
     async startMicrophone() {
