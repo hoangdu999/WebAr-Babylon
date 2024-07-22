@@ -25,9 +25,12 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, Control, TextBlock } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
+import earcut from "earcut";
 
+// Make earcut available globally
+window.earcut = earcut;
 export default {
   name: "BabylonCpn",
   data() {
@@ -169,6 +172,7 @@ export default {
       this.handleAnchors(this.anchors, scene);
       this.createGUIButton();
       this.createGUIButtonMicro();
+      this.createGUITextbox();
       const planes = [];
 
       xrPlanes.onPlaneAddedObservable.add((plane) => {
@@ -237,6 +241,19 @@ export default {
       });
 
       guiCanvas.addControl(guiButton);
+    },
+    createGUITextbox() {
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
+      const textbox = new TextBlock();
+      textbox.text = "Microphone Input:";
+      textbox.color = "white";
+      textbox.fontSize = 24;
+      textbox.top = "-200px";
+      textbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      textbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+
+      guiCanvas.addControl(textbox);
     },
     async startMicrophone() {
       try {
