@@ -21,10 +21,10 @@ import {
   SceneLoader,
   MeshBuilder,
   Quaternion,
+  ShadowOnlyMaterial,
   AnimationPropertiesOverride,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
-import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 
@@ -44,6 +44,7 @@ export default {
       currentModel: null,
       audioContext: null,
       microphoneStream: null,
+      microphoneSource: null, // Thêm biến này
     };
   },
   mounted() {
@@ -241,8 +242,8 @@ export default {
       try {
         this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-        microphoneSource.connect(this.audioContext.destination);
+        this.microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
+        this.microphoneSource.connect(this.audioContext.destination);
         console.log('Microphone started');
       } catch (error) {
         console.error('Error accessing the microphone:', error);
@@ -252,11 +253,19 @@ export default {
       if (this.microphoneStream) {
         this.microphoneStream.getTracks().forEach(track => track.stop());
         this.microphoneStream = null;
+        if (this.microphoneSource) {
+          this.microphoneSource.disconnect();
+          this.microphoneSource = null;
+        }
+        if (this.audioContext) {
+          this.audioContext.close();
+          this.audioContext = null;
+        }
         console.log('Microphone stopped');
       }
     },
     handleAnchors(anchors, scene) {
-      if (anchors) { 
+      if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
           if (this.currentModel) {
             this.currentModel.dispose();
