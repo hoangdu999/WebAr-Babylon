@@ -6,6 +6,8 @@
       touch-action="none"
       style="width: 100%; height: 100%"
     ></canvas>
+    <!-- Nút để bật micro -->
+    <button id="microButton" @click="toggleMicrophone">Toggle Microphone</button>
   </div>
 </template>
 
@@ -15,54 +17,40 @@ import {
   Scene,
   FreeCamera,
   Vector3,
-  HemisphericLight,
   DirectionalLight,
   ShadowGenerator,
   SceneLoader,
   MeshBuilder,
   Quaternion,
-  Color3,
-  StandardMaterial,
-  PolygonMeshBuilder,
-  WebXRHitTest,
-  WebXRPlaneDetector,
-  WebXRAnchorSystem,
-  WebXRBackgroundRemover,
-  WebXRState,
-  Vector2,
+  ShadowOnlyMaterial,
   AnimationPropertiesOverride,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
-import "@babylonjs/inspector";
-import { ShadowOnlyMaterial } from "@babylonjs/materials";
-
-import earcut from "earcut";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
-
-// Make earcut available globally
-window.earcut = earcut;
+import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 
 export default {
   name: "BabylonCpn",
   data() {
     return {
-      engine: null, // Babylon.js engine
-      scene: null, // Babylon.js scene
-      camera: null, // Camera for the scene
-      shadowGenerator: null, // Shadow generator
-      model: null, // Loaded 3D model
-      hitTest: null, // Hit test result for AR
-      marker: null, // Marker for indicating placement in AR
-      xr: null, // XR experience
-      anchors: null, // Anchor system
-      currentModel: null, // Reference to the currently placed model
+      engine: null,
+      scene: null,
+      camera: null,
+      shadowGenerator: null,
+      model: null,
+      hitTest: null,
+      marker: null,
+      xr: null,
+      anchors: null,
+      currentModel: null,
+      audioContext: null,
+      microphoneStream: null,
     };
   },
   mounted() {
-    this.initializeBabylon(); // Initialize Babylon.js when the component is mounted
+    this.initializeBabylon();
   },
   methods: {
-    // Initialize Babylon.js and start the render loop
     async initializeBabylon() {
       const canvas = this.$el.querySelector("#renderCanvas");
       this.engine = new Engine(canvas, true);
@@ -78,63 +66,36 @@ export default {
         this.engine.resize();
       });
     },
-
-    // Create and configure the scene
     async createScene(canvas) {
       const scene = new Scene(this.engine);
 
-      this.createCamera(scene, canvas); // Create and configure the camera
-      this.createLights(scene); // Create and configure lights
-      // this.createShadowGenerator(scene); // Create and configure shadow generator
-
-      this.model = await this.loadModel(scene); // Load the 3D model
+      this.createCamera(scene, canvas);
+      this.createLights(scene);
+      this.model = await this.loadModel(scene);
       this.Ground(scene);
-      this.marker = this.createMarker(scene); // Create the marker for AR
-      await this.setupXR(scene); // Set up WebXR
+      this.marker = this.createMarker(scene);
+      await this.setupXR(scene);
 
       return scene;
     },
-
-    // Create and configure the camera
     createCamera(scene, canvas) {
       this.camera = new FreeCamera("camera1", new Vector3(0, 1, -5), scene);
       this.camera.setTarget(Vector3.Zero());
       this.camera.attachControl(canvas, true);
     },
-
-    // Create and configure lights
     createLights(scene) {
       scene.lights.forEach((light) => light.dispose());
 
-      var light = new DirectionalLight(
-        "dirLight",
-        new Vector3(-2, -3, 1),
-        scene
-      );
+      var light = new DirectionalLight("dirLight", new Vector3(-2, -3, 1), scene);
       light.position = new Vector3(6, 9, 3);
 
       this.shadowGenerator = new ShadowGenerator(1024, light);
       this.shadowGenerator.useBlurExponentialShadowMap = true;
       this.shadowGenerator.blurKernel = 32;
-      this.shadowGenerator.darkness = 0.5; // Điều chỉnh độ tối của bóng đổ
+      this.shadowGenerator.darkness = 0.5;
     },
-
-    // Create and configure the shadow generator
-    // createShadowGenerator(scene) {
-    //   const dirLight = scene.lights.find((light) => light.name === "dirLight");
-    //   this.shadowGenerator = new ShadowGenerator(1024, dirLight);
-    //   this.shadowGenerator.useBlurExponentialShadowMap = true;
-    //   this.shadowGenerator.blurKernel = 32;
-    // },
-
-    // Load the 3D model and configure its properties
     async loadModel(scene) {
-      const result = await SceneLoader.ImportMeshAsync(
-        "",
-        "models/",
-        "dummy3.babylon",
-        scene
-      );
+      const result = await SceneLoader.ImportMeshAsync("", "models/", "dummy3.babylon", scene);
       const model = result.meshes[0];
       model.rotationQuaternion = new Quaternion();
 
@@ -142,25 +103,19 @@ export default {
       model.receiveShadows = true;
 
       model.isVisible = false;
-      model.scaling = new Vector3(0.5, 0.5, 0.5); 
+      model.scaling = new Vector3(0.5, 0.5, 0.5);
       const skeleton = result.skeletons[0];
-      this.setupAnimations(scene, skeleton); // Set up animations for the model
+      this.setupAnimations(scene, skeleton);
 
       return model;
     },
     Ground(scene) {
-      const ground = MeshBuilder.CreateGround(
-        "ground",
-        { width: 4, height: 4 },
-        scene
-      );
+      const ground = MeshBuilder.CreateGround("ground", { width: 4, height: 4 }, scene);
       ground.receiveShadows = true;
 
-      // Tạo vật liệu tiêu chuẩn và áp dụng cho mặt đất
       const groundMaterial = new ShadowOnlyMaterial("groundMaterial", scene);
       ground.material = groundMaterial;
     },
-    // Set up animations for the 3D model
     setupAnimations(scene, skeleton) {
       skeleton.animationPropertiesOverride = new AnimationPropertiesOverride();
       skeleton.animationPropertiesOverride.enableBlending = true;
@@ -170,20 +125,12 @@ export default {
       const idleRange = skeleton.getAnimationRange("YBot_Idle");
       scene.beginAnimation(skeleton, idleRange.from, idleRange.to, true);
     },
-
-    // Create the marker for AR
     createMarker(scene) {
-      const marker = MeshBuilder.CreateTorus(
-        "marker",
-        { diameter: 0.15, thickness: 0.05 },
-        scene
-      );
+      const marker = MeshBuilder.CreateTorus("marker", { diameter: 0.15, thickness: 0.05 }, scene);
       marker.isVisible = false;
       marker.rotationQuaternion = new Quaternion();
       return marker;
     },
-
-    // Set up WebXR
     async setupXR(scene) {
       this.xr = await scene.createDefaultXRExperienceAsync({
         uiOptions: {
@@ -194,14 +141,11 @@ export default {
       });
 
       const fm = this.xr.baseExperience.featuresManager;
-
-      // Enable WebXR features
       const xrTest = fm.enableFeature(WebXRHitTest.Name, "latest");
       const xrPlanes = fm.enableFeature(WebXRPlaneDetector.Name, "latest");
       this.anchors = fm.enableFeature(WebXRAnchorSystem.Name, "latest");
       const xrBackgroundRemover = fm.enableFeature(WebXRBackgroundRemover.Name);
 
-      // Handle hit test results
       xrTest.onHitTestResultObservable.add((results) => {
         if (results.length) {
           this.marker.isVisible = true;
@@ -222,9 +166,7 @@ export default {
         }
       });
 
-      this.handleAnchors(this.anchors, scene); // Handle anchor creation and management
-
-      // Create and configure the GUI button
+      this.handleAnchors(this.anchors, scene);
       this.createGUIButton();
 
       const planes = [];
@@ -237,24 +179,19 @@ export default {
         // Update detected planes
       });
 
-      // Remove detected planes
       xrPlanes.onPlaneRemovedObservable.add((plane) => {
         if (plane && planes[plane.id]) {
           planes[plane.id].dispose();
         }
       });
 
-      // Clean up detected planes when the XR session is initialized
       this.xr.baseExperience.sessionManager.onXRSessionInit.add(() => {
         planes.forEach((plane) => plane.dispose());
-        // Use a comment to avoid the empty block error
         while (planes.pop()) {
           // Removed a plane
         }
       });
     },
-
-    // Create and configure the GUI button
     createGUIButton() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
@@ -275,13 +212,11 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
-
-    // Handle anchor creation and management
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
           if (this.currentModel) {
-            this.currentModel.dispose(); // Dispose the previous model if it exists
+            this.currentModel.dispose();
           }
           const cloneModel = this.model.clone("mensch");
           cloneModel.isVisible = true;
@@ -297,7 +232,7 @@ export default {
           );
           this.model.isVisible = false;
 
-          this.currentModel = anchor.attachedNode; // Update the reference to the current model
+          this.currentModel = anchor.attachedNode;
         });
 
         anchors.onAnchorRemovedObservable.add((anchor) => {
@@ -308,11 +243,29 @@ export default {
         });
       }
     },
-
-    // Place the model at the hit test result
     placeModel() {
       if (this.hitTest && this.xr.baseExperience.state === WebXRState.IN_XR) {
         this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
+      }
+    },
+    // Function to toggle microphone
+    async toggleMicrophone() {
+      if (this.microphoneStream) {
+        // Stop the microphone
+        this.microphoneStream.getTracks().forEach(track => track.stop());
+        this.microphoneStream = null;
+        console.log('Microphone stopped');
+      } else {
+        try {
+          // Start the microphone
+          this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
+          microphoneSource.connect(this.audioContext.destination);
+          console.log('Microphone started');
+        } catch (error) {
+          console.error('Error accessing the microphone:', error);
+        }
       }
     },
   },
@@ -320,7 +273,6 @@ export default {
 </script>
 
 <style scoped>
-/* Ensure the canvas takes up the full viewport */
 body {
   margin: 0;
   overflow: hidden;
@@ -328,5 +280,19 @@ body {
 canvas {
   width: 100%;
   height: 100%;
+}
+button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background-color: #000;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+button:hover {
+  background-color: #333;
 }
 </style>
