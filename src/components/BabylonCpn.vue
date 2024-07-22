@@ -21,10 +21,10 @@ import {
   SceneLoader,
   MeshBuilder,
   Quaternion,
-  ShadowOnlyMaterial,
   AnimationPropertiesOverride,
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
+import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 
@@ -256,7 +256,7 @@ export default {
       }
     },
     handleAnchors(anchors, scene) {
-      if (anchors) {
+      if (anchors) { 
         anchors.onAnchorAddedObservable.add((anchor) => {
           if (this.currentModel) {
             this.currentModel.dispose();
