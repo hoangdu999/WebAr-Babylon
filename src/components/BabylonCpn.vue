@@ -25,7 +25,7 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import { AdvancedDynamicTexture, Button, Control, TextBlock } from "@babylonjs/gui";
+import { AdvancedDynamicTexture, Button, Control, InputText } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 import earcut from "earcut";
 
@@ -245,13 +245,18 @@ export default {
     createGUITextbox() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-      const textbox = new TextBlock();
-      textbox.text = "Microphone Input:";
+      const textbox = new InputText();
+      textbox.width = "300px";
+      textbox.height = "100px";
       textbox.color = "white";
       textbox.fontSize = 24;
-      textbox.top = "-200px";
+      textbox.background = "black";
+      textbox.text = "";
+      textbox.placeholderText = "Enter text here...";
       textbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       textbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      textbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
+      textbox.top = "-210px"; // Đặt textbox trên nút micro 10px
 
       guiCanvas.addControl(textbox);
     },
