@@ -203,6 +203,7 @@ export default {
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      guiButton.left = "-160px";
       guiButton.top = "-100px";
 
       guiButton.onPointerUpObservable.add(() => {
@@ -223,7 +224,8 @@ export default {
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.top = "-300px";
+      guiButton.left = "160px"; // Đặt nút ở bên phải nút "Place"
+      guiButton.top = "-100px";
 
       guiButton.onPointerDownObservable.add(() => {
         this.startMicrophone();
