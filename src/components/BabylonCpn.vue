@@ -227,12 +227,15 @@ export default {
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       guiButton.left = "160px"; // Đặt nút ở bên phải nút "Place"
       guiButton.top = "-100px";
+
       guiButton.onPointerDownObservable.add(() => {
         this.startMicrophone();
       });
+
       guiButton.onPointerUpObservable.add(() => {
         this.stopMicrophone();
       });
+
       guiCanvas.addControl(guiButton);
     },
     async startMicrophone() {
