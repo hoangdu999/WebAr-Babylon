@@ -44,7 +44,7 @@ export default {
       currentModel: null,
       audioContext: null,
       microphoneStream: null,
-      microphoneSource: null, // Thêm biến này
+      microphoneSource: null,
     };
   },
   mounted() {
