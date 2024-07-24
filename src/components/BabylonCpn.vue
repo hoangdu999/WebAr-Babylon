@@ -263,8 +263,6 @@ export default {
         this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-        // Bỏ kết nối phát lại âm thanh
-        // this.microphoneSource.connect(this.audioContext.destination);
 
         // Khởi tạo Web Speech API
         this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
