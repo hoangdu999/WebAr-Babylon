@@ -6,6 +6,7 @@
       touch-action="none"
       style="width: 100%; height: 100%"
     ></canvas>
+    <p id="transcriptionText"></p> <!-- Thêm phần này để hiển thị văn bản đã chuyển đổi -->
   </div>
 </template>
 
@@ -44,9 +45,7 @@ export default {
       xr: null,
       anchors: null,
       currentModel: null,
-      audioContext: null,
-      microphoneStream: null,
-      microphoneSource: null,
+      recognition: null, // Thêm phần này để sử dụng Web Speech API
     };
   },
   mounted() {
@@ -264,26 +263,45 @@ export default {
         this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-        this.microphoneSource.connect(this.audioContext.destination);
-        console.log('Microphone started');
+        // Bỏ kết nối phát lại âm thanh
+        // this.microphoneSource.connect(this.audioContext.destination);
+
+        // Khởi tạo Web Speech API
+        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        this.recognition.lang = 'en-US';
+        this.recognition.interimResults = false;
+        this.recognition.maxAlternatives = 1;
+
+        this.recognition.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          console.log('Transcript:', transcript);
+          document.getElementById('transcriptionText').innerText = transcript;
+        };
+
+        this.recognition.start();
+        console.log('Microphone started and recognition started');
       } catch (error) {
         console.error('Error accessing the microphone:', error);
       }
     },
     stopMicrophone() {
+      if (this.recognition) {
+        this.recognition.stop();
+        console.log('Recognition stopped');
+      }
       if (this.microphoneStream) {
         this.microphoneStream.getTracks().forEach(track => track.stop());
         this.microphoneStream = null;
-        if (this.microphoneSource) {
-          this.microphoneSource.disconnect();
-          this.microphoneSource = null;
-        }
-        if (this.audioContext) {
-          this.audioContext.close();
-          this.audioContext = null;
-        }
-        console.log('Microphone stopped');
       }
+      if (this.microphoneSource) {
+        this.microphoneSource.disconnect();
+        this.microphoneSource = null;
+      }
+      if (this.audioContext) {
+        this.audioContext.close();
+        this.audioContext = null;
+      }
+      console.log('Microphone stopped');
     },
     handleAnchors(anchors, scene) {
       if (anchors) {
