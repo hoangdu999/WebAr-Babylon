@@ -6,7 +6,6 @@
       touch-action="none"
       style="width: 100%; height: 100%"
     ></canvas>
-    <!-- Nút để bật micro -->
   </div>
 </template>
 
