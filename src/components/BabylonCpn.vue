@@ -332,6 +332,7 @@ export default {
         });
       }
     },
+    //..//
     placeModel() {
       if (this.hitTest && this.xr.baseExperience.state === WebXRState.IN_XR) {
         this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
