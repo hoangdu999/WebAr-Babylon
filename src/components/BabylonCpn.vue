@@ -77,7 +77,7 @@ export default {
       this.Ground(scene);
       this.marker = this.createMarker(scene);
       await this.setupXR(scene);
-//k//
+
       return scene;
     },
     createCamera(scene, canvas) {
