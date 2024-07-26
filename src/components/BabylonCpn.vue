@@ -273,7 +273,7 @@ export default {
 
         this.recognition.onresult = async (event) => {
           const transcript = event.results[0][0].transcript;
-          console.log('Transcript:', transcript); // Log văn bản đã nhận diện từ giọng nói
+          console.log('Transcript:'); // Log văn bản đã nhận diện từ giọng nói
 
           // Gọi API /chat với đoạn text vừa chuyển đổi
           try {
