@@ -1,12 +1,11 @@
 <template>
   <div>
-    <!-- The canvas element where the Babylon.js scene will be rendered -->
     <canvas
       id="renderCanvas"
       touch-action="none"
       style="width: 100%; height: 100%"
     ></canvas>
-    <p id="transcriptionText"></p> <!-- Thêm phần này để hiển thị văn bản đã chuyển đổi -->
+    <p id="transcriptionText"></p>
   </div>
 </template>
 
@@ -28,8 +27,8 @@ import { ShadowOnlyMaterial } from "@babylonjs/materials";
 import { AdvancedDynamicTexture, Button, Control, InputText } from "@babylonjs/gui";
 import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
 import earcut from "earcut";
+import axios from 'axios';
 
-// Make earcut available globally
 window.earcut = earcut;
 export default {
   name: "BabylonCpn",
@@ -45,7 +44,10 @@ export default {
       xr: null,
       anchors: null,
       currentModel: null,
-      recognition: null, // Thêm phần này để sử dụng Web Speech API
+      recognition: null,
+      audioContext: null,
+      microphoneStream: null,
+      microphoneSource: null,
     };
   },
   mounted() {
@@ -270,10 +272,25 @@ export default {
         this.recognition.interimResults = false;
         this.recognition.maxAlternatives = 1;
 
-        this.recognition.onresult = (event) => {
+        this.recognition.onresult = async (event) => {
           const transcript = event.results[0][0].transcript;
           console.log('Transcript:', transcript);
           document.getElementById('transcriptionText').innerText = transcript;
+
+          // Gọi API /chat với đoạn text vừa chuyển đổi
+          try {
+            const response = await axios.post('http://localhost:5000/chat', { user_input: transcript });
+            const { response: aiResponse, audio_url } = response.data;
+
+            // Hiển thị text trả về
+            document.getElementById('transcriptionText').innerText += '\nAI Response: ' + aiResponse;
+
+            // Phát audio ngay lập tức
+            const audioPlayer = new Audio(audio_url);
+            audioPlayer.play();
+          } catch (error) {
+            console.error('Error calling chat API:', error);
+          }
         };
 
         this.recognition.start();
@@ -332,7 +349,6 @@ export default {
         });
       }
     },
-    //..//
     placeModel() {
       if (this.hitTest && this.xr.baseExperience.state === WebXRState.IN_XR) {
         this.anchors.addAnchorPointUsingHitTestResultAsync(this.hitTest);
