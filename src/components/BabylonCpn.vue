@@ -261,6 +261,8 @@ export default {
     },
     async startMicrophone() {
       try {
+        console.log('1'); 
+
         this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
         this.microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
@@ -270,6 +272,7 @@ export default {
         this.recognition.lang = 'en-US';
         this.recognition.interimResults = false;
         this.recognition.maxAlternatives = 1;
+        console.log('2'); 
 
         this.recognition.onresult = async (event) => {
           const transcript = event.results[0][0].transcript;
@@ -277,6 +280,8 @@ export default {
 
           // Gọi API /chat với đoạn text vừa chuyển đổi
           try {
+            console.log('3'); 
+
             const response = await axios.post('http://localhost:5000/chat', { user_input: transcript });
             const { response: aiResponse, audio_url } = response.data;
 
@@ -286,6 +291,8 @@ export default {
             // Phát audio ngay lập tức
             const audioPlayer = new Audio(audio_url);
             audioPlayer.play();
+            console.log('4'); 
+
           } catch (error) {
             console.error('Error calling chat API:', error);
           }
