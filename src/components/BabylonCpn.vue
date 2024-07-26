@@ -5,7 +5,6 @@
       touch-action="none"
       style="width: 100%; height: 100%"
     ></canvas>
-    <p id="transcriptionText"></p>
   </div>
 </template>
 
@@ -276,16 +275,13 @@ export default {
           const transcript = event.results[0][0].transcript;
           console.log('Transcript:', transcript); // Log văn bản đã nhận diện từ giọng nói
 
-          // Hiển thị văn bản đã nhận diện từ giọng nói
-          document.getElementById('transcriptionText').innerText = transcript;
-
           // Gọi API /chat với đoạn text vừa chuyển đổi
           try {
             const response = await axios.post('http://localhost:5000/chat', { user_input: transcript });
             const { response: aiResponse, audio_url } = response.data;
 
-            // Hiển thị text trả về
-            document.getElementById('transcriptionText').innerText += '\nAI Response: ' + aiResponse;
+            // Log text trả về
+            console.log('AI Response:', aiResponse);
 
             // Phát audio ngay lập tức
             const audioPlayer = new Audio(audio_url);
