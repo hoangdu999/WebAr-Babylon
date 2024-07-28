@@ -37,8 +37,15 @@ import {
   WebXRState,
 } from "@babylonjs/core/XR";
 import earcut from "earcut";
-import axios from "axios";
-import https from 'https';
+import axios from 'axios';
+import https from 'https-browserify';
+
+// Cấu hình axios để chấp nhận chứng chỉ tự ký
+const instance = axios.create({
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false,
+  }),
+});
 
 window.earcut = earcut;
 export default {
@@ -347,15 +354,10 @@ export default {
       }
     },
     sendToChatAPI(user_input) {
-      axios
+      instance
         .post(
           "https://46.250.229.146:5009/chat",
-          { user_input },
-          {
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false,
-            }),
-          }
+          { user_input }
         )
         .then((response) => {
           const data = response.data;
