@@ -259,70 +259,57 @@ export default {
 
       guiCanvas.addControl(textbox);
     },
-    async startMicrophone() {
-      try {
-        console.log('1'); 
+    startMicrophone() {
+      if ('webkitSpeechRecognition' in window) {
+        // eslint-disable-next-line no-undef
+        this.recognition = new webkitSpeechRecognition();
+      } else if ('SpeechRecognition' in window) {
+            // eslint-disable-next-line no-undef
+        this.recognition = new SpeechRecognition();
+      } else {
+        alert('Your browser does not support Speech Recognition');
+        return;
+      }
 
-        this.microphoneStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        this.microphoneSource = this.audioContext.createMediaStreamSource(this.microphoneStream);
-
-        // Khởi tạo Web Speech API
-        this.recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        this.recognition.lang = 'en-US';
+      if (this.recognition) {
+        this.recognition.continuous = false;
         this.recognition.interimResults = false;
-        this.recognition.maxAlternatives = 1;
-        console.log('2'); 
+        this.recognition.lang = 'vi-VN';
 
-        this.recognition.onresult = async (event) => {
+        this.recognition.onstart = () => {
+          console.log('Đang ghi âm...');
+        };
+
+        this.recognition.onresult = (event) => {
+          console.log('Đã ghi âm xong.');
           const transcript = event.results[0][0].transcript;
-          console.log('Transcript:'); // Log văn bản đã nhận diện từ giọng nói
+          this.updateTextbox(transcript);
+        };
 
-          // Gọi API /chat với đoạn text vừa chuyển đổi
-          try {
-            console.log('3'); 
+        this.recognition.onerror = (event) => {
+          console.log('Có lỗi xảy ra trong quá trình ghi âm: ' + event.error);
+        };
 
-            const response = await axios.post('http://localhost:5000/chat', { user_input: transcript });
-            const { response: aiResponse, audio_url } = response.data;
-
-            // Log text trả về
-            console.log('AI Response:', aiResponse);
-
-            // Phát audio ngay lập tức
-            const audioPlayer = new Audio(audio_url);
-            audioPlayer.play();
-            console.log('4'); 
-
-          } catch (error) {
-            console.error('Error calling chat API:', error);
-          }
+        this.recognition.onend = () => {
+          console.log('Ghi âm kết thúc.');
         };
 
         this.recognition.start();
-        console.log('Microphone started and recognition started');
-      } catch (error) {
-        console.error('Error accessing the microphone:', error);
       }
     },
     stopMicrophone() {
       if (this.recognition) {
         this.recognition.stop();
-        console.log('Recognition stopped');
       }
-      if (this.microphoneStream) {
-        this.microphoneStream.getTracks().forEach(track => track.stop());
-        this.microphoneStream = null;
-      }
-      if (this.microphoneSource) {
-        this.microphoneSource.disconnect();
-        this.microphoneSource = null;
-      }
-      if (this.audioContext) {
-        this.audioContext.close();
-        this.audioContext = null;
-      }
-      console.log('Microphone stopped');
     },
+    updateTextbox(text) {
+      const guiCanvas = AdvancedDynamicTexture.GetFullscreenUI("UI");
+      const textbox = guiCanvas.getControlByName("textbox");
+      if (textbox) {
+        textbox.text = text;
+      }
+    },
+    
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
