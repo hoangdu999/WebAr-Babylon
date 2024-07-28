@@ -347,7 +347,7 @@ export default {
     },
     sendToChatAPI(user_input) {
       axios
-        .post("http://46.250.229.146:5000/api/chat", { user_input })
+        .post("https://46.250.229.146:5000/api/chat", { user_input })
         .then((response) => {
           const data = response.data;
           const answerTextbox =
@@ -359,7 +359,7 @@ export default {
 
           // Tạo phần tử audio và phát âm thanh
           const audio = new Audio(
-            `http://46.250.229.146:5000/api/audio/${data.audio_file}`
+            `https://46.250.229.146:5000/api/audio/${data.audio_file}`
           );
           audio.play();
         })
