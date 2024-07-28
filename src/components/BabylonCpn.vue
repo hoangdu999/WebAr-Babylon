@@ -276,6 +276,7 @@ export default {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const textbox = new InputText();
+      textbox.name = "textbox"; // Thêm dòng này để đặt tên cho textbox
       textbox.width = "300px";
       textbox.height = "100px";
       textbox.color = "white";
