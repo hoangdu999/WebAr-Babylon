@@ -229,6 +229,11 @@ export default {
       });
     },
     createGUIButton() {
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
+      
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
@@ -248,6 +253,11 @@ export default {
       this.guiTexture.addControl(guiButton);
     },
     createGUIButtonMicro() {
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
+      
       const guiButton = Button.CreateSimpleButton(
         "microButton",
         "Hold to Listen"
@@ -274,6 +284,11 @@ export default {
       this.guiTexture.addControl(guiButton);
     },
     createQuestionTextbox() {
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
+      
       const questionTextbox = new InputText();
       questionTextbox.name = "questionTextbox";
       questionTextbox.width = "300px";
@@ -291,6 +306,11 @@ export default {
       this.guiTexture.addControl(questionTextbox);
     },
     createAnswerTextbox() {
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
+      
       const answerTextbox = new InputText();
       answerTextbox.name = "answerTextbox";
       answerTextbox.width = "300px";
