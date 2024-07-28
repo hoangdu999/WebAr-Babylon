@@ -58,7 +58,6 @@ export default {
       audioContext: null,
       microphoneStream: null,
       microphoneSource: null,
-      guiTexture: null,
     };
   },
   mounted() {
@@ -79,9 +78,6 @@ export default {
       window.addEventListener("resize", () => {
         this.engine.resize();
       });
-
-      // Create GUI texture
-      this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     },
     async createScene(canvas) {
       const scene = new Scene(this.engine);
@@ -229,11 +225,8 @@ export default {
       });
     },
     createGUIButton() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
-      
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
       guiButton.height = "100px";
@@ -250,14 +243,11 @@ export default {
         this.placeModel();
       });
 
-      this.guiTexture.addControl(guiButton);
+      guiCanvas.addControl(guiButton);
     },
     createGUIButtonMicro() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
-      
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
       const guiButton = Button.CreateSimpleButton(
         "microButton",
         "Hold to Listen"
@@ -281,16 +271,13 @@ export default {
         this.stopMicrophone();
       });
 
-      this.guiTexture.addControl(guiButton);
+      guiCanvas.addControl(guiButton);
     },
     createQuestionTextbox() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
-      
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
       const questionTextbox = new InputText();
-      questionTextbox.name = "questionTextbox";
+      questionTextbox.name = "questionTextbox"; 
       questionTextbox.width = "300px";
       questionTextbox.height = "100px";
       questionTextbox.color = "white";
@@ -300,32 +287,29 @@ export default {
       questionTextbox.placeholderText = "Ask your question here...";
       questionTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       questionTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      questionTextbox.left = "160px";
-      questionTextbox.top = "-210px";
+      questionTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
+      questionTextbox.top = "-210px"; // Đặt textbox trên nút micro 10px
 
-      this.guiTexture.addControl(questionTextbox);
+      guiCanvas.addControl(questionTextbox);
     },
     createAnswerTextbox() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
-      
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+
       const answerTextbox = new InputText();
-      answerTextbox.name = "answerTextbox";
+      answerTextbox.name = "answerTextbox"; 
       answerTextbox.width = "300px";
-      answerTextbox.height = "200px"; // Cao gấp đôi questionTextbox
+      answerTextbox.height = "200px";
       answerTextbox.color = "white";
       answerTextbox.fontSize = 24;
       answerTextbox.background = "black";
       answerTextbox.text = "";
-      answerTextbox.placeholderText = "AI will answer here...";
+      answerTextbox.placeholderText = "AIVI will answer here...";
       answerTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       answerTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      answerTextbox.left = "160px";
-      answerTextbox.top = "-420px"; // Đặt answerTextbox phía trên questionTextbox một chút
+      answerTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
+      answerTextbox.top = "-420px"; // Đặt textbox trên nút micro 10px
 
-      this.guiTexture.addControl(answerTextbox);
+      guiCanvas.addControl(answerTextbox);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
@@ -353,7 +337,7 @@ export default {
           console.log("Đã ghi âm xong.");
           const transcript = event.results[0][0].transcript;
           console.log("Văn bản đã ghi âm được:", transcript); // Log ra văn bản đã ghi âm được
-          this.updateAnswerTextbox(transcript);
+          this.updateTextbox(transcript);
         };
 
         this.recognition.onerror = (event) => {
@@ -373,12 +357,7 @@ export default {
         this.recognition.stop();
       }
     },
-    updateAnswerTextbox(text) {
-      const answerTextbox = this.guiTexture.getControlByName("answerTextbox");
-      if (answerTextbox) {
-        answerTextbox.text = text;
-      }
-    },
+
 
     handleAnchors(anchors, scene) {
       if (anchors) {
