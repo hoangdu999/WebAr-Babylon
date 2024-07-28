@@ -38,6 +38,7 @@ import {
 } from "@babylonjs/core/XR";
 import earcut from "earcut";
 import axios from "axios";
+import https from 'https';
 
 window.earcut = earcut;
 export default {
@@ -347,15 +348,23 @@ export default {
     },
     sendToChatAPI(user_input) {
       axios
-        .post("https://46.250.229.146:5009/chat", { user_input })
+        .post(
+          "https://46.250.229.146:5009/chat",
+          { user_input },
+          {
+            httpsAgent: new https.Agent({
+              rejectUnauthorized: false,
+            }),
+          }
+        )
         .then((response) => {
           const data = response.data;
+          console.log("API Response:", data);
           const answerTextbox =
             this.guiTexture.getControlByName("questionTextbox");
           if (answerTextbox) {
             answerTextbox.text = data.response;
           }
-          console.log("API Response:", data);
 
           // Tạo phần tử audio và phát âm thanh
           const audio = new Audio(
