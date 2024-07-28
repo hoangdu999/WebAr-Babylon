@@ -277,7 +277,7 @@ export default {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const questionTextbox = new InputText();
-      questionTextbox.name = "questionTextbox"; 
+      questionTextbox.name = "questionTextbox";
       questionTextbox.width = "300px";
       questionTextbox.height = "100px";
       questionTextbox.color = "white";
@@ -296,7 +296,7 @@ export default {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const answerTextbox = new InputText();
-      answerTextbox.name = "answerTextbox"; 
+      answerTextbox.name = "answerTextbox";
       answerTextbox.width = "300px";
       answerTextbox.height = "200px";
       answerTextbox.color = "white";
@@ -337,7 +337,8 @@ export default {
           console.log("Đã ghi âm xong.");
           const transcript = event.results[0][0].transcript;
           console.log("Văn bản đã ghi âm được:", transcript); // Log ra văn bản đã ghi âm được
-          this.updateTextbox(transcript);
+          this.updateAnswerTextbox(transcript);
+          this.sendToChatAPI(transcript);
         };
 
         this.recognition.onerror = (event) => {
@@ -358,7 +359,28 @@ export default {
       }
     },
 
-
+    updateAnswerTextbox(text) {
+      const answerTextbox = this.guiTexture.getControlByName("answerTextbox");
+      if (answerTextbox) {
+        answerTextbox.text = text;
+      }
+    },
+    sendToChatAPI(user_input) {
+      axios
+        .post("http://localhost:5000/chat", { user_input })
+        .then((response) => {
+          const data = response.data;
+          const answerTextbox =
+            this.guiTexture.getControlByName("answerTextbox");
+          if (answerTextbox) {
+            answerTextbox.text = data.response;
+          }
+          console.log("API Response:", data);
+        })
+        .catch((error) => {
+          console.error("API Error:", error);
+        });
+    },
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
