@@ -199,7 +199,6 @@ export default {
       this.handleAnchors(this.anchors, scene);
       this.createGUIButton();
       this.createGUIButtonMicro();
-      this.createQuestionTextbox();
       this.createAnswerTextbox();
       const planes = [];
 
@@ -273,13 +272,13 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
-    createQuestionTextbox() {
+    createAnswerTextbox() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const questionTextbox = new InputText();
       questionTextbox.name = "questionTextbox";
       questionTextbox.width = "300px";
-      questionTextbox.height = "100px";
+      questionTextbox.height = "200px";
       questionTextbox.color = "white";
       questionTextbox.fontSize = 24;
       questionTextbox.background = "black";
@@ -290,42 +289,7 @@ export default {
       questionTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextbox.top = "-210px"; // Đặt textbox trên nút micro 10px
 
-      // Đảm bảo cho phép nhập văn bản từ bàn phím
-      questionTextbox.focusedBackground = "gray"; // Màu nền khi được focus
-      questionTextbox.onFocusObservable.add(function () {
-        // Kích hoạt khi textbox được focus
-        questionTextbox.text = "";
-      });
-
       guiCanvas.addControl(questionTextbox);
-
-      // Đảm bảo text box có thể nhận focus từ bàn phím
-      questionTextbox.onFocusObservable.add(() => {
-        guiCanvas.addControl(questionTextbox);
-      });
-
-      questionTextbox.onBlurObservable.add(() => {
-        guiCanvas.removeControl(questionTextbox);
-      });
-    },
-    createAnswerTextbox() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
-      const answerTextbox = new InputText();
-      answerTextbox.name = "answerTextbox";
-      answerTextbox.width = "300px";
-      answerTextbox.height = "200px";
-      answerTextbox.color = "white";
-      answerTextbox.fontSize = 24;
-      answerTextbox.background = "black";
-      answerTextbox.text = "";
-      answerTextbox.placeholderText = "AIVI will answer here...";
-      answerTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      answerTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      answerTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
-      answerTextbox.top = "-420px"; // Đặt textbox trên nút micro 10px
-
-      guiCanvas.addControl(answerTextbox);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
@@ -387,11 +351,17 @@ export default {
         .then((response) => {
           const data = response.data;
           const answerTextbox =
-            this.guiTexture.getControlByName("answerTextbox");
+            this.guiTexture.getControlByName("questionTextbox");
           if (answerTextbox) {
             answerTextbox.text = data.response;
           }
           console.log("API Response:", data);
+
+          // Tạo phần tử audio và phát âm thanh
+          const audio = new Audio(
+            `http://localhost:5000/audio/${data.audio_file}`
+          );
+          audio.play();
         })
         .catch((error) => {
           console.error("API Error:", error);
