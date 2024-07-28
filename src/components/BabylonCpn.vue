@@ -23,10 +23,21 @@ import {
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
-import { AdvancedDynamicTexture, Button, Control, InputText } from "@babylonjs/gui";
-import { WebXRHitTest, WebXRPlaneDetector, WebXRAnchorSystem, WebXRBackgroundRemover, WebXRState } from "@babylonjs/core/XR";
+import {
+  AdvancedDynamicTexture,
+  Button,
+  Control,
+  InputText,
+} from "@babylonjs/gui";
+import {
+  WebXRHitTest,
+  WebXRPlaneDetector,
+  WebXRAnchorSystem,
+  WebXRBackgroundRemover,
+  WebXRState,
+} from "@babylonjs/core/XR";
 import earcut from "earcut";
-import axios from 'axios';
+import axios from "axios";
 
 window.earcut = earcut;
 export default {
@@ -88,7 +99,11 @@ export default {
     createLights(scene) {
       scene.lights.forEach((light) => light.dispose());
 
-      var light = new DirectionalLight("dirLight", new Vector3(-2, -3, 1), scene);
+      var light = new DirectionalLight(
+        "dirLight",
+        new Vector3(-2, -3, 1),
+        scene
+      );
       light.position = new Vector3(6, 9, 3);
 
       this.shadowGenerator = new ShadowGenerator(1024, light);
@@ -97,7 +112,12 @@ export default {
       this.shadowGenerator.darkness = 0.5;
     },
     async loadModel(scene) {
-      const result = await SceneLoader.ImportMeshAsync("", "models/", "dummy3.babylon", scene);
+      const result = await SceneLoader.ImportMeshAsync(
+        "",
+        "models/",
+        "dummy3.babylon",
+        scene
+      );
       const model = result.meshes[0];
       model.rotationQuaternion = new Quaternion();
 
@@ -112,7 +132,11 @@ export default {
       return model;
     },
     Ground(scene) {
-      const ground = MeshBuilder.CreateGround("ground", { width: 4, height: 4 }, scene);
+      const ground = MeshBuilder.CreateGround(
+        "ground",
+        { width: 4, height: 4 },
+        scene
+      );
       ground.receiveShadows = true;
 
       const groundMaterial = new ShadowOnlyMaterial("groundMaterial", scene);
@@ -128,7 +152,11 @@ export default {
       scene.beginAnimation(skeleton, idleRange.from, idleRange.to, true);
     },
     createMarker(scene) {
-      const marker = MeshBuilder.CreateTorus("marker", { diameter: 0.15, thickness: 0.05 }, scene);
+      const marker = MeshBuilder.CreateTorus(
+        "marker",
+        { diameter: 0.15, thickness: 0.05 },
+        scene
+      );
       marker.isVisible = false;
       marker.rotationQuaternion = new Quaternion();
       return marker;
@@ -219,7 +247,10 @@ export default {
     createGUIButtonMicro() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-      const guiButton = Button.CreateSimpleButton("microButton", "Hold to Listen");
+      const guiButton = Button.CreateSimpleButton(
+        "microButton",
+        "Hold to Listen"
+      );
       guiButton.width = "300px";
       guiButton.height = "100px";
       guiButton.color = "white";
@@ -260,43 +291,46 @@ export default {
       guiCanvas.addControl(textbox);
     },
     startMicrophone() {
-      if ('webkitSpeechRecognition' in window) {
+      // eslint-disable-next-line no-undef
+      if ("webkitSpeechRecognition" in window) {
         // eslint-disable-next-line no-undef
         this.recognition = new webkitSpeechRecognition();
-      } else if ('SpeechRecognition' in window) {
-            // eslint-disable-next-line no-undef
+      } else if ("SpeechRecognition" in window) {
+        // eslint-disable-next-line no-undef
         this.recognition = new SpeechRecognition();
       } else {
-        alert('Your browser does not support Speech Recognition');
+        alert("Your browser does not support Speech Recognition");
         return;
       }
 
       if (this.recognition) {
         this.recognition.continuous = false;
         this.recognition.interimResults = false;
-        this.recognition.lang = 'vi-VN';
+        this.recognition.lang = "vi-VN";
 
         this.recognition.onstart = () => {
-          console.log('Đang ghi âm...');
+          console.log("Đang ghi âm...");
         };
 
         this.recognition.onresult = (event) => {
-          console.log('Đã ghi âm xong.');
+          console.log("Đã ghi âm xong.");
           const transcript = event.results[0][0].transcript;
+          console.log("Văn bản đã ghi âm được:", transcript); // Log ra văn bản đã ghi âm được
           this.updateTextbox(transcript);
         };
 
         this.recognition.onerror = (event) => {
-          console.log('Có lỗi xảy ra trong quá trình ghi âm: ' + event.error);
+          console.log("Có lỗi xảy ra trong quá trình ghi âm: " + event.error);
         };
 
         this.recognition.onend = () => {
-          console.log('Ghi âm kết thúc.');
+          console.log("Ghi âm kết thúc.");
         };
 
         this.recognition.start();
       }
     },
+
     stopMicrophone() {
       if (this.recognition) {
         this.recognition.stop();
@@ -309,7 +343,7 @@ export default {
         textbox.text = text;
       }
     },
-    
+
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
