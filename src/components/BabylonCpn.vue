@@ -38,7 +38,7 @@ import {
 } from "@babylonjs/core/XR";
 import earcut from "earcut";
 import axios from "axios";
-import https from 'https';
+import https from "https";
 
 window.earcut = earcut;
 export default {
@@ -348,15 +348,7 @@ export default {
     },
     sendToChatAPI(user_input) {
       axios
-        .post(
-          "https://46.250.229.146:5009/chat",
-          { user_input },
-          {
-            httpsAgent: new https.Agent({
-              rejectUnauthorized: false,
-            }),
-          }
-        )
+        .post("http://46.250.229.146:5009/chat", { user_input })
         .then((response) => {
           const data = response.data;
           console.log("API Response:", data);
@@ -368,7 +360,7 @@ export default {
 
           // Tạo phần tử audio và phát âm thanh
           const audio = new Audio(
-            `https://46.250.229.146:5009/audio/${data.audio_file}`
+            `http://46.250.229.146:5009/audio/${data.audio_file}`
           );
           audio.play();
         })
@@ -376,6 +368,7 @@ export default {
           console.error("API Error:", error);
         });
     },
+
     handleAnchors(anchors, scene) {
       if (anchors) {
         anchors.onAnchorAddedObservable.add((anchor) => {
