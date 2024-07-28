@@ -58,7 +58,6 @@ export default {
       audioContext: null,
       microphoneStream: null,
       microphoneSource: null,
-      guiTexture: null, // Ensure this is initialized
     };
   },
   mounted() {
@@ -79,9 +78,6 @@ export default {
       window.addEventListener("resize", () => {
         this.engine.resize();
       });
-
-      // Create GUI texture
-      this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     },
     async createScene(canvas) {
       const scene = new Scene(this.engine);
@@ -229,10 +225,7 @@ export default {
       });
     },
     createGUIButton() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
@@ -250,13 +243,10 @@ export default {
         this.placeModel();
       });
 
-      this.guiTexture.addControl(guiButton);
+      guiCanvas.addControl(guiButton);
     },
     createGUIButtonMicro() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const guiButton = Button.CreateSimpleButton(
         "microButton",
@@ -281,13 +271,10 @@ export default {
         this.stopMicrophone();
       });
 
-      this.guiTexture.addControl(guiButton);
+      guiCanvas.addControl(guiButton);
     },
     createQuestionTextbox() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const questionTextbox = new InputText();
       questionTextbox.name = "questionTextbox";
@@ -303,48 +290,42 @@ export default {
       questionTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextbox.top = "-210px"; // Đặt textbox trên nút micro 10px
 
-      this.guiTexture.addControl(questionTextbox);
-
-      const sendButton = Button.CreateSimpleButton("sendButton", "Send");
-      sendButton.width = "100px";
-      sendButton.height = "50px";
-      sendButton.color = "white";
-      sendButton.fontSize = "24px";
-      sendButton.cornerRadius = 5;
-      sendButton.background = "black";
-      sendButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      sendButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      sendButton.left = "310px"; // Đặt nút send song song với mép phải của questionTextbox
-      sendButton.top = "-210px"; // Đặt nút send ngay bên dưới questionTextbox
-
-      sendButton.onPointerUpObservable.add(() => {
-        const userInput = questionTextbox.text;
-        this.sendToChatAPI(userInput);
+      // Đảm bảo cho phép nhập văn bản từ bàn phím
+      questionTextbox.focusedBackground = "gray"; // Màu nền khi được focus
+      questionTextbox.onFocusObservable.add(function () {
+        // Kích hoạt khi textbox được focus
+        questionTextbox.text = "";
       });
 
-      this.guiTexture.addControl(sendButton);
+      guiCanvas.addControl(questionTextbox);
+
+      // Đảm bảo text box có thể nhận focus từ bàn phím
+      questionTextbox.onFocusObservable.add(() => {
+        guiCanvas.addControl(questionTextbox);
+      });
+
+      questionTextbox.onBlurObservable.add(() => {
+        guiCanvas.removeControl(questionTextbox);
+      });
     },
     createAnswerTextbox() {
-      if (!this.guiTexture) {
-        console.error("GUI texture not initialized");
-        return;
-      }
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const answerTextbox = new InputText();
       answerTextbox.name = "answerTextbox";
       answerTextbox.width = "300px";
-      answerTextbox.height = "200px"; // Cao gấp đôi questionTextbox
+      answerTextbox.height = "200px";
       answerTextbox.color = "white";
       answerTextbox.fontSize = 24;
       answerTextbox.background = "black";
       answerTextbox.text = "";
-      answerTextbox.placeholderText = "AI will answer here...";
+      answerTextbox.placeholderText = "AIVI will answer here...";
       answerTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       answerTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      answerTextbox.left = "160px";
-      answerTextbox.top = "-420px"; // Đặt answerTextbox phía trên questionTextbox một chút
+      answerTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
+      answerTextbox.top = "-420px"; // Đặt textbox trên nút micro 10px
 
-      this.guiTexture.addControl(answerTextbox);
+      guiCanvas.addControl(answerTextbox);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
