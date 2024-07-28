@@ -58,6 +58,7 @@ export default {
       audioContext: null,
       microphoneStream: null,
       microphoneSource: null,
+      guiTexture: null, // Ensure this is initialized
     };
   },
   mounted() {
@@ -78,6 +79,9 @@ export default {
       window.addEventListener("resize", () => {
         this.engine.resize();
       });
+
+      // Create GUI texture
+      this.guiTexture = AdvancedDynamicTexture.CreateFullscreenUI("UI");
     },
     async createScene(canvas) {
       const scene = new Scene(this.engine);
@@ -225,7 +229,10 @@ export default {
       });
     },
     createGUIButton() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
 
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
       guiButton.width = "300px";
@@ -243,10 +250,13 @@ export default {
         this.placeModel();
       });
 
-      guiCanvas.addControl(guiButton);
+      this.guiTexture.addControl(guiButton);
     },
     createGUIButtonMicro() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
 
       const guiButton = Button.CreateSimpleButton(
         "microButton",
@@ -271,10 +281,13 @@ export default {
         this.stopMicrophone();
       });
 
-      guiCanvas.addControl(guiButton);
+      this.guiTexture.addControl(guiButton);
     },
     createQuestionTextbox() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
 
       const questionTextbox = new InputText();
       questionTextbox.name = "questionTextbox";
@@ -290,26 +303,48 @@ export default {
       questionTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextbox.top = "-210px"; // Đặt textbox trên nút micro 10px
 
-      guiCanvas.addControl(questionTextbox);
+      this.guiTexture.addControl(questionTextbox);
+
+      const sendButton = Button.CreateSimpleButton("sendButton", "Send");
+      sendButton.width = "100px";
+      sendButton.height = "50px";
+      sendButton.color = "white";
+      sendButton.fontSize = "24px";
+      sendButton.cornerRadius = 5;
+      sendButton.background = "black";
+      sendButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      sendButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      sendButton.left = "310px"; // Đặt nút send song song với mép phải của questionTextbox
+      sendButton.top = "-210px"; // Đặt nút send ngay bên dưới questionTextbox
+
+      sendButton.onPointerUpObservable.add(() => {
+        const userInput = questionTextbox.text;
+        this.sendToChatAPI(userInput);
+      });
+
+      this.guiTexture.addControl(sendButton);
     },
     createAnswerTextbox() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      if (!this.guiTexture) {
+        console.error("GUI texture not initialized");
+        return;
+      }
 
       const answerTextbox = new InputText();
       answerTextbox.name = "answerTextbox";
       answerTextbox.width = "300px";
-      answerTextbox.height = "200px";
+      answerTextbox.height = "200px"; // Cao gấp đôi questionTextbox
       answerTextbox.color = "white";
       answerTextbox.fontSize = 24;
       answerTextbox.background = "black";
       answerTextbox.text = "";
-      answerTextbox.placeholderText = "AIVI will answer here...";
+      answerTextbox.placeholderText = "AI will answer here...";
       answerTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       answerTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      answerTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
-      answerTextbox.top = "-420px"; // Đặt textbox trên nút micro 10px
+      answerTextbox.left = "160px";
+      answerTextbox.top = "-420px"; // Đặt answerTextbox phía trên questionTextbox một chút
 
-      guiCanvas.addControl(answerTextbox);
+      this.guiTexture.addControl(answerTextbox);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
