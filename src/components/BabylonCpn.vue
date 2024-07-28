@@ -274,7 +274,7 @@ export default {
     },
     createAnswerTextbox() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-
+      this.guiTexture = guiCanvas;
       const questionTextbox = new InputText();
       questionTextbox.name = "questionTextbox";
       questionTextbox.width = "300px";
