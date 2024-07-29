@@ -356,7 +356,7 @@ export default {
     sendToChatAPI(user_input) {
       instance
         .post(
-          "https://46.250.229.146:5009/chat",
+          "https://backend.tech-sustain.pro/chat",
           { user_input }
         )
         .then((response) => {
@@ -370,7 +370,7 @@ export default {
 
           // Tạo phần tử audio và phát âm thanh
           const audio = new Audio(
-            `https://46.250.229.146:5009/audio/${data.audio_file}`
+            `https://backend.tech-sustain.pro/audio/${data.audio_file}`
           );
           audio.play();
         })
