@@ -29,7 +29,7 @@ import {
   Control,
   InputText,
   InputTextArea,
-  ScrollViewer
+  ScrollViewer,
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -297,12 +297,13 @@ export default {
       const questionTextArea = new InputTextArea();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
-      questionTextArea.height = "200px";
+      questionTextArea.height = "1000px"; // Tăng chiều cao để kiểm tra cuộn
       questionTextArea.color = "white";
       questionTextArea.fontSize = 24;
       questionTextArea.background = "black";
       questionTextArea.text = "";
       questionTextArea.placeholderText = "AIVI will answer you here...";
+      questionTextArea.textWrapping = true;
 
       // Thêm TextArea vào ScrollViewer
       scrollViewer.addControl(questionTextArea);
