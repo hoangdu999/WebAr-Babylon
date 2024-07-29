@@ -209,7 +209,7 @@ export default {
       this.handleAnchors(this.anchors, scene);
       this.createGUIButton();
       this.createGUIButtonMicro();
-      this.createAnswerTextbox();
+      this.createAnswerTextArea();
       const planes = [];
 
       xrPlanes.onPlaneAddedObservable.add((plane) => {
