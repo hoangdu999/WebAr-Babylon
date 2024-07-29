@@ -44,11 +44,6 @@ import axios from 'axios';
 import https from 'https-browserify';
 
 // Cấu hình axios để chấp nhận chứng chỉ tự ký
-const instance = axios.create({
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false,
-  }),
-});
 
 window.earcut = earcut;
 export default {
@@ -286,7 +281,7 @@ export default {
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
-      const questionTextArea = InputTextArea();
+      const questionTextArea =new InputTextArea();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
       questionTextArea.height = "200px";
@@ -357,7 +352,7 @@ export default {
       }
     },
     sendToChatAPI(user_input) {
-      instance
+      axios
         .post(
           "https://backend.tech-sustain.pro/chat",
           { user_input }
