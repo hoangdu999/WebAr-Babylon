@@ -20,6 +20,7 @@ import {
   MeshBuilder,
   Quaternion,
   AnimationPropertiesOverride,
+
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
@@ -28,6 +29,7 @@ import {
   Button,
   Control,
   InputText,
+  TextArea
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -280,24 +282,24 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
-    createAnswerTextbox() {
+    createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-      this.guiTexture = guiCanvas;
-      const questionTextbox = new InputText();
-      questionTextbox.name = "questionTextbox";
-      questionTextbox.width = "300px";
-      questionTextbox.height = "200px";
-      questionTextbox.color = "white";
-      questionTextbox.fontSize = 24;
-      questionTextbox.background = "black";
-      questionTextbox.text = "";
-      questionTextbox.placeholderText = "Ask your question here...";
-      questionTextbox.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      questionTextbox.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      questionTextbox.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
-      questionTextbox.top = "-210px"; // Đặt textbox trên nút micro 10px
+      this.guiTextArea = guiCanvas;
+      const questionTextArea = new TextArea();
+      questionTextArea.name = "questionTextArea";
+      questionTextArea.width = "300px";
+      questionTextArea.height = "200px";
+      questionTextArea.color = "white";
+      questionTextArea.fontSize = 24;
+      questionTextArea.background = "black";
+      questionTextArea.text = "";
+      questionTextArea.placeholderText = "Ask your question here...";
+      questionTextArea.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
+      questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
 
-      guiCanvas.addControl(questionTextbox);
+      guiCanvas.addControl(questionTextArea);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
@@ -348,7 +350,7 @@ export default {
     },
 
     updateAnswerTextbox(text) {
-      const answerTextbox = this.guiTexture.getControlByName("answerTextbox");
+      const answerTextbox = this.guiTextArea.getControlByName("answerTextArea");
       if (answerTextbox) {
         answerTextbox.text = text;
       }
@@ -363,7 +365,7 @@ export default {
           const data = response.data;
           console.log("API Response:", data);
           const answerTextbox =
-            this.guiTexture.getControlByName("questionTextbox");
+            this.guiTextArea.getControlByName("questionTextArea");
           if (answerTextbox) {
             answerTextbox.text = data.response;
           }
