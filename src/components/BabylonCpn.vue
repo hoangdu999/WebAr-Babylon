@@ -300,8 +300,11 @@ export default {
       guiCanvas.addControl(questionTextArea);
 
       setTimeout(() => {
-        questionTextArea._textarea.style.overflow = "auto";
-      }, 0);
+        const textareaElement = document.querySelector('textarea[name="questionTextArea"]');
+        if (textareaElement) {
+          textareaElement.style.overflow = "auto";
+        }
+      }, 100);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
