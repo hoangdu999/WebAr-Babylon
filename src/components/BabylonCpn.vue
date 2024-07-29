@@ -297,12 +297,11 @@ export default {
       // questionTextArea.style.overflow = "scroll";
       guiCanvas.addControl(questionTextArea);
 
-      setTimeout(() => {
-        const textareaElement = document.querySelector('textarea[name="questionTextArea"]');
-        if (textareaElement) {
-          textareaElement.style.overflow = "auto";
+      questionTextArea.onPointerEnterObservable.add(() => {
+        if (questionTextArea._host._rootContainer._linkedControls[0]._domElement) {
+          questionTextArea._host._rootContainer._linkedControls[0]._domElement.style.overflow = "auto";
         }
-      }, 100);
+      });
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
