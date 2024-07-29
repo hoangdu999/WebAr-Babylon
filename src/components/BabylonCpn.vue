@@ -28,7 +28,6 @@ import {
   Button,
   Control,
   InputText,
-  TextArea,
   InputTextArea,
   ScrollViewer
 } from "@babylonjs/gui";
@@ -281,7 +280,21 @@ export default {
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
-      const questionTextArea = new ScrollViewer();
+
+      // Tạo ScrollViewer để chứa TextArea
+      const scrollViewer = new ScrollViewer();
+      scrollViewer.width = "320px";
+      scrollViewer.height = "220px";
+      scrollViewer.color = "white";
+      scrollViewer.thickness = 0;
+      scrollViewer.background = "black";
+      scrollViewer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      scrollViewer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      scrollViewer.left = "160px"; // Đặt ScrollViewer trên cùng vị trí ngang của nút micro
+      scrollViewer.top = "-210px"; // Đặt ScrollViewer trên nút micro 10px
+
+      // Tạo TextArea bên trong ScrollViewer
+      const questionTextArea = new InputTextArea();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
       questionTextArea.height = "200px";
@@ -290,12 +303,12 @@ export default {
       questionTextArea.background = "black";
       questionTextArea.text = "";
       questionTextArea.placeholderText = "AIVI will answer you here...";
-      questionTextArea.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
-      questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
-      // questionTextArea.style.overflow = "scroll";
-      guiCanvas.addControl(questionTextArea);
+
+      // Thêm TextArea vào ScrollViewer
+      scrollViewer.addControl(questionTextArea);
+
+      // Thêm ScrollViewer vào GUI
+      guiCanvas.addControl(scrollViewer);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
