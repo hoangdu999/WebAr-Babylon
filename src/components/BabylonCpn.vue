@@ -30,6 +30,7 @@ import {
   InputText,
   TextArea,
   InputTextArea,
+  ScrollViewer
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -280,7 +281,7 @@ export default {
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
-      const questionTextArea = new InputTextArea();
+      const questionTextArea = new ScrollViewer();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
       questionTextArea.height = "200px";
@@ -294,8 +295,6 @@ export default {
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
       // questionTextArea.style.overflow = "scroll";
-      questionTextArea.textWrapping = true; // Kích hoạt việc tự động xuống dòng nếu cần thiết
-      questionTextArea.clipContent = true; // Đảm bảo nội dung bị giới hạn trong khu vực của TextArea
       guiCanvas.addControl(questionTextArea);
     },
     startMicrophone() {
