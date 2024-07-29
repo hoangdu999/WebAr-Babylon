@@ -294,7 +294,7 @@ export default {
       questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
-      questionTextArea.style.overflow = "scroll";
+      // questionTextArea.style.overflow = "scroll";
       questionTextArea._host._host = guiCanvas;
 
       guiCanvas.addControl(questionTextArea);
