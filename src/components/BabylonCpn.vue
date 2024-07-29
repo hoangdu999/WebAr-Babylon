@@ -289,12 +289,13 @@ export default {
       questionTextArea.fontSize = 24;
       questionTextArea.background = "black";
       questionTextArea.text = "";
-      questionTextArea.placeholderText = "Ask your question here...";
+      questionTextArea.placeholderText = "AIVI will answer you here...";
       questionTextArea.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
-
+      questionTextArea.style.overflow = "scroll";
+      
       guiCanvas.addControl(questionTextArea);
     },
     startMicrophone() {
