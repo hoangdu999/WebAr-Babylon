@@ -29,7 +29,8 @@ import {
   Button,
   Control,
   InputText,
-  TextArea
+  TextArea,
+  InputTextArea
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -285,7 +286,7 @@ export default {
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
-      const questionTextArea = new TextArea();
+      const questionTextArea = InputTextArea();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
       questionTextArea.height = "200px";
