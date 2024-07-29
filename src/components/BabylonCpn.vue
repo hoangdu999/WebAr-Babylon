@@ -289,23 +289,14 @@ export default {
       questionTextArea.background = "black";
       questionTextArea.text = "";
       questionTextArea.placeholderText = "AIVI will answer you here...";
-      questionTextArea.horizontalAlignment =
-        Control.HORIZONTAL_ALIGNMENT_CENTER;
+      questionTextArea.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
       // questionTextArea.style.overflow = "scroll";
+      questionTextArea.textWrapping = true; // Kích hoạt việc tự động xuống dòng nếu cần thiết
+      questionTextArea.clipContent = true; // Đảm bảo nội dung bị giới hạn trong khu vực của TextArea
       guiCanvas.addControl(questionTextArea);
-
-      setTimeout(() => {
-        if (
-          questionTextArea._host &&
-          questionTextArea._host._rootContainer._linkedControls[0]._domElement
-        ) {
-          questionTextArea._host._rootContainer._linkedControls[0]._domElement.style.overflow =
-            "auto";
-        }
-      }, 0);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
