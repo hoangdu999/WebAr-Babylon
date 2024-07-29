@@ -295,8 +295,13 @@ export default {
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
       questionTextArea.style.overflow = "scroll";
-      
+      questionTextArea._host._host = guiCanvas;
+
       guiCanvas.addControl(questionTextArea);
+
+      setTimeout(() => {
+        questionTextArea._textarea.style.overflow = "auto";
+      }, 0);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
