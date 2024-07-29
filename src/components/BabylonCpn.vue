@@ -20,7 +20,6 @@ import {
   MeshBuilder,
   Quaternion,
   AnimationPropertiesOverride,
-
 } from "@babylonjs/core";
 import "@babylonjs/loaders";
 import { ShadowOnlyMaterial } from "@babylonjs/materials";
@@ -30,7 +29,7 @@ import {
   Control,
   InputText,
   TextArea,
-  InputTextArea
+  InputTextArea,
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -40,8 +39,8 @@ import {
   WebXRState,
 } from "@babylonjs/core/XR";
 import earcut from "earcut";
-import axios from 'axios';
-import https from 'https-browserify';
+import axios from "axios";
+import https from "https-browserify";
 
 // Cấu hình axios để chấp nhận chứng chỉ tự ký
 
@@ -281,7 +280,7 @@ export default {
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
-      const questionTextArea =new InputTextArea();
+      const questionTextArea = new InputTextArea();
       questionTextArea.name = "questionTextArea";
       questionTextArea.width = "300px";
       questionTextArea.height = "200px";
@@ -290,18 +289,23 @@ export default {
       questionTextArea.background = "black";
       questionTextArea.text = "";
       questionTextArea.placeholderText = "AIVI will answer you here...";
-      questionTextArea.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      questionTextArea.horizontalAlignment =
+        Control.HORIZONTAL_ALIGNMENT_CENTER;
       questionTextArea.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       questionTextArea.left = "160px"; // Đặt textbox trên cùng vị trí ngang của nút micro
       questionTextArea.top = "-210px"; // Đặt textbox trên nút micro 10px
       // questionTextArea.style.overflow = "scroll";
       guiCanvas.addControl(questionTextArea);
 
-      questionTextArea.onPointerEnterObservable.add(() => {
-        if (questionTextArea._host._rootContainer._linkedControls[0]._domElement) {
-          questionTextArea._host._rootContainer._linkedControls[0]._domElement.style.overflow = "auto";
+      setTimeout(() => {
+        if (
+          questionTextArea._host &&
+          questionTextArea._host._rootContainer._linkedControls[0]._domElement
+        ) {
+          questionTextArea._host._rootContainer._linkedControls[0]._domElement.style.overflow =
+            "auto";
         }
-      });
+      }, 0);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
@@ -359,10 +363,7 @@ export default {
     },
     sendToChatAPI(user_input) {
       axios
-        .post(
-          "https://backend.tech-sustain.pro/chat",
-          { user_input }
-        )
+        .post("https://backend.tech-sustain.pro/chat", { user_input })
         .then((response) => {
           const data = response.data;
           console.log("API Response:", data);
