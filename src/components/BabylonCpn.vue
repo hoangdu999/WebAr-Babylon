@@ -253,24 +253,34 @@ export default {
     createGUIButtonMicro() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
+      // Khởi tạo nút micro
       const guiButton = Button.CreateSimpleButton("microButton", "Micro");
-      guiButton.width = "150px"; // Tăng chiều rộng lên 1.5 lần
-      guiButton.height = "150px"; // Tăng chiều cao lên 1.5 lần
+      guiButton.width = "150px";
+      guiButton.height = "150px";
       guiButton.color = "white";
       guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 75; // 50% của chiều rộng/chiều cao để tạo hình tròn
+      guiButton.cornerRadius = 75;
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.left = "160px"; // Đặt nó ở bên phải nút "Place"
+      guiButton.left = "160px";
       guiButton.top = "-100px";
 
-      guiButton.onPointerDownObservable.add(() => {
-        this.startMicrophone();
-      });
+      // Trạng thái của micro
+      let isListening = false;
 
+      // Sự kiện khi nhấn nút micro
       guiButton.onPointerUpObservable.add(() => {
-        this.stopMicrophone();
+        if (!isListening) {
+          // Bắt đầu lắng nghe
+          guiButton.textBlock.text = "Listening";
+          this.startMicrophone();
+        } else {
+          // Kết thúc lắng nghe
+          guiButton.textBlock.text = "Micro";
+          this.stopMicrophone();
+        }
+        isListening = !isListening; // Đảo trạng thái lắng nghe
       });
 
       guiCanvas.addControl(guiButton);
@@ -312,7 +322,6 @@ export default {
       guiCanvas.addControl(scrollViewer);
     },
     startMicrophone() {
-      // eslint-disable-next-line no-undef
       if ("webkitSpeechRecognition" in window) {
         // eslint-disable-next-line no-undef
         this.recognition = new webkitSpeechRecognition();
@@ -336,7 +345,7 @@ export default {
         this.recognition.onresult = (event) => {
           console.log("Đã ghi âm xong.");
           const transcript = event.results[0][0].transcript;
-          console.log("Văn bản đã ghi âm được:", transcript); // Log ra văn bản đã ghi âm được
+          console.log("Văn bản đã ghi âm được:", transcript);
           this.updateAnswerTextbox(transcript);
           this.sendToChatAPI(transcript);
         };
