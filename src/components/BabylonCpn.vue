@@ -232,11 +232,11 @@ export default {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
-      guiButton.width = "100px"; // Make width and height equal for a circular button
-      guiButton.height = "100px";
+      guiButton.width = "150px"; // Tăng chiều rộng lên 1.5 lần
+      guiButton.height = "150px"; // Tăng chiều cao lên 1.5 lần
       guiButton.color = "white";
       guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 50; // 50% of the width/height for circular shape
+      guiButton.cornerRadius = 75; // 50% của chiều rộng/chiều cao để tạo hình tròn
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
@@ -253,19 +253,16 @@ export default {
     createGUIButtonMicro() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-      const guiButton = Button.CreateSimpleButton(
-        "microButton",
-        "Hold to Listen"
-      );
-      guiButton.width = "100px"; // Make width and height equal for a circular button
-      guiButton.height = "100px";
+      const guiButton = Button.CreateSimpleButton("microButton", "Micro");
+      guiButton.width = "150px"; // Tăng chiều rộng lên 1.5 lần
+      guiButton.height = "150px"; // Tăng chiều cao lên 1.5 lần
       guiButton.color = "white";
       guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 50; // 50% of the width/height for circular shape
+      guiButton.cornerRadius = 75; // 50% của chiều rộng/chiều cao để tạo hình tròn
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.left = "160px"; // Position it on the right side of the Place button
+      guiButton.left = "160px"; // Đặt nó ở bên phải nút "Place"
       guiButton.top = "-100px";
 
       guiButton.onPointerDownObservable.add(() => {
@@ -278,6 +275,7 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
+
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
       this.guiTextArea = guiCanvas;
