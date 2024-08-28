@@ -287,10 +287,11 @@ export default {
       scrollViewer.color = "white";
       scrollViewer.thickness = 0;
       scrollViewer.background = "black";
+      scrollViewer.cornerRadius = 20; // Bo cong góc với bán kính 20px
       scrollViewer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
       scrollViewer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       scrollViewer.left = "160px"; // Đặt ScrollViewer trên cùng vị trí ngang của nút micro
-      scrollViewer.top = "-210px"; // Đặt ScrollViewer trên nút micro 10px
+      scrollViewer.top = "-270px"; // Đặt ScrollViewer trên nút micro, cách nút 20px
 
       // Tạo TextArea bên trong ScrollViewer
       const questionTextArea = new InputTextArea();
