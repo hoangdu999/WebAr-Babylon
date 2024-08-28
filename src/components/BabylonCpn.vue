@@ -27,9 +27,9 @@ import {
   AdvancedDynamicTexture,
   Button,
   Control,
-  Rectangle,
-  ScrollViewer, // Import ScrollViewer từ Babylon.js GUI
-  InputTextArea // Import InputTextArea từ Babylon.js GUI
+  InputText,
+  InputTextArea,
+  ScrollViewer,
 } from "@babylonjs/gui";
 import {
   WebXRHitTest,
@@ -41,6 +41,8 @@ import {
 import earcut from "earcut";
 import axios from "axios";
 import https from "https-browserify";
+
+// Cấu hình axios để chấp nhận chứng chỉ tự ký
 
 window.earcut = earcut;
 export default {
@@ -230,11 +232,11 @@ export default {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
       const guiButton = Button.CreateSimpleButton("guiButton", "Place");
-      guiButton.width = "300px";
+      guiButton.width = "100px"; // Make width and height equal for a circular button
       guiButton.height = "100px";
       guiButton.color = "white";
       guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 5;
+      guiButton.cornerRadius = 50; // 50% of the width/height for circular shape
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
@@ -254,97 +256,133 @@ export default {
         "microButton",
         "Hold to Listen"
       );
-      guiButton.width = "300px";
+      guiButton.width = "100px"; // Make width and height equal for a circular button
       guiButton.height = "100px";
       guiButton.color = "white";
       guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 5;
+      guiButton.cornerRadius = 50; // 50% of the width/height for circular shape
       guiButton.background = "black";
       guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
       guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.left = "160px"; // Đặt nút ở bên phải nút "Place"
+      guiButton.left = "160px"; // Position it on the right side of the Place button
       guiButton.top = "-100px";
 
+      guiButton.onPointerDownObservable.add(() => {
+        this.startMicrophone();
+      });
+
       guiButton.onPointerUpObservable.add(() => {
-        this.showMicrophoneOptions();
+        this.stopMicrophone();
       });
 
       guiCanvas.addControl(guiButton);
     },
-    showMicrophoneOptions() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    startMicrophone() {
+      // eslint-disable-next-line no-undef
+      if ("webkitSpeechRecognition" in window) {
+        // eslint-disable-next-line no-undef
+        this.recognition = new webkitSpeechRecognition();
+      } else if ("SpeechRecognition" in window) {
+        // eslint-disable-next-line no-undef
+        this.recognition = new SpeechRecognition();
+      } else {
+        alert("Your browser does not support Speech Recognition");
+        return;
+      }
 
-      const container = new Rectangle();
-      container.width = "500px";
-      container.height = "200px";
-      container.cornerRadius = 20;
-      container.color = "black";
-      container.thickness = 2;
-      container.background = "white";
-      container.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      container.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      container.top = "-300px";
-      guiCanvas.addControl(container);
+      if (this.recognition) {
+        this.recognition.continuous = false;
+        this.recognition.interimResults = false;
+        this.recognition.lang = "vi-VN";
 
-      // Add Delete Button
-      const deleteButton = Button.CreateSimpleButton("deleteButton", "Xóa");
-      deleteButton.width = "150px";
-      deleteButton.height = "80px";
-      deleteButton.color = "white";
-      deleteButton.background = "red";
-      deleteButton.fontSize = "24px";
-      deleteButton.left = "-160px";
-      deleteButton.onPointerUpObservable.add(() => {
-        console.log("Deleted");
-      });
-      container.addControl(deleteButton);
+        this.recognition.onstart = () => {
+          console.log("Đang ghi âm...");
+        };
 
-      // Add Send Button
-      const sendButton = Button.CreateSimpleButton("sendButton", "Gửi");
-      sendButton.width = "150px";
-      sendButton.height = "80px";
-      sendButton.color = "white";
-      sendButton.background = "blue";
-      sendButton.fontSize = "24px";
-      sendButton.left = "160px";
-      sendButton.onPointerUpObservable.add(() => {
-        console.log("Sent");
-      });
-      container.addControl(sendButton);
+        this.recognition.onresult = (event) => {
+          console.log("Đã ghi âm xong.");
+          const transcript = event.results[0][0].transcript;
+          console.log("Văn bản đã ghi âm được:", transcript); // Log ra văn bản đã ghi âm được
+          this.updateAnswerTextbox(transcript);
+          this.sendToChatAPI(transcript);
+        };
+
+        this.recognition.onerror = (event) => {
+          console.log("Có lỗi xảy ra trong quá trình ghi âm: " + event.error);
+        };
+
+        this.recognition.onend = () => {
+          console.log("Ghi âm kết thúc.");
+        };
+
+        this.recognition.start();
+      }
     },
-    createAnswerTextArea() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
-      this.guiTextArea = guiCanvas;
 
-      // Tạo ScrollViewer để chứa TextArea
-      const scrollViewer = new ScrollViewer();
-      scrollViewer.width = "320px";
-      scrollViewer.height = "220px";
-      scrollViewer.color = "white";
-      scrollViewer.thickness = 0;
-      scrollViewer.background = "black";
-      scrollViewer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      scrollViewer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      scrollViewer.left = "160px"; // Đặt ScrollViewer trên cùng vị trí ngang của nút micro
-      scrollViewer.top = "-210px"; // Đặt ScrollViewer trên nút micro 10px
+    stopMicrophone() {
+      if (this.recognition) {
+        this.recognition.stop();
+      }
+    },
 
-      // Tạo TextArea bên trong ScrollViewer
-      const questionTextArea = new InputTextArea();
-      questionTextArea.name = "questionTextArea";
-      questionTextArea.width = "300px";
-      questionTextArea.height = "1000px"; // Tăng chiều cao để kiểm tra cuộn
-      questionTextArea.color = "white";
-      questionTextArea.fontSize = 24;
-      questionTextArea.background = "black";
-      questionTextArea.text = "";
-      questionTextArea.placeholderText = "AIVI will answer you here...";
-      questionTextArea.textWrapping = true;
+    updateAnswerTextbox(text) {
+      const answerTextbox = this.guiTextArea.getControlByName("answerTextArea");
+      if (answerTextbox) {
+        answerTextbox.text = text;
+      }
+    },
+    sendToChatAPI(user_input) {
+      axios
+        .post("https://backend.tech-sustain.pro/chat", { user_input })
+        .then((response) => {
+          const data = response.data;
+          console.log("API Response:", data);
+          const answerTextbox =
+            this.guiTextArea.getControlByName("questionTextArea");
+          if (answerTextbox) {
+            answerTextbox.text = data.response;
+          }
 
-      // Thêm TextArea vào ScrollViewer
-      scrollViewer.addControl(questionTextArea);
+          // Tạo phần tử audio và phát âm thanh
+          const audio = new Audio(
+            `https://backend.tech-sustain.pro/audio/${data.audio_file}`
+          );
+          audio.play();
+        })
+        .catch((error) => {
+          console.error("API Error:", error);
+        });
+    },
+    handleAnchors(anchors, scene) {
+      if (anchors) {
+        anchors.onAnchorAddedObservable.add((anchor) => {
+          if (this.currentModel) {
+            this.currentModel.dispose();
+          }
+          const cloneModel = this.model.clone("mensch");
+          cloneModel.isVisible = true;
+          cloneModel.scaling = new Vector3(0.5, 0.5, 0.5);
+          anchor.attachedNode = cloneModel;
+          anchor.attachedNode.skeleton = this.model.skeleton.clone("skelet");
+          this.shadowGenerator.addShadowCaster(anchor.attachedNode, true);
+          scene.beginAnimation(
+            anchor.attachedNode.skeleton,
+            this.model.skeleton.getAnimationRange("YBot_Idle").from,
+            this.model.skeleton.getAnimationRange("YBot_Idle").to,
+            true
+          );
+          this.model.isVisible = false;
 
-      // Thêm ScrollViewer vào GUI
-      guiCanvas.addControl(scrollViewer);
+          this.currentModel = anchor.attachedNode;
+        });
+
+        anchors.onAnchorRemovedObservable.add((anchor) => {
+          if (anchor) {
+            anchor.attachedNode.isVisible = false;
+            anchor.attachedNode.dispose();
+          }
+        });
+      }
     },
     placeModel() {
       if (this.hitTest && this.xr.baseExperience.state === WebXRState.IN_XR) {
