@@ -249,6 +249,7 @@ export default {
 
       guiCanvas.addControl(guiButton);
     },
+
     createGUIButtonMicro() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
@@ -276,6 +277,40 @@ export default {
       });
 
       guiCanvas.addControl(guiButton);
+    },
+    createAnswerTextArea() {
+      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+      this.guiTextArea = guiCanvas;
+
+      // Tạo ScrollViewer để chứa TextArea
+      const scrollViewer = new ScrollViewer();
+      scrollViewer.width = "320px";
+      scrollViewer.height = "220px";
+      scrollViewer.color = "white";
+      scrollViewer.thickness = 0;
+      scrollViewer.background = "black";
+      scrollViewer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+      scrollViewer.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+      scrollViewer.left = "160px"; // Đặt ScrollViewer trên cùng vị trí ngang của nút micro
+      scrollViewer.top = "-210px"; // Đặt ScrollViewer trên nút micro 10px
+
+      // Tạo TextArea bên trong ScrollViewer
+      const questionTextArea = new InputTextArea();
+      questionTextArea.name = "questionTextArea";
+      questionTextArea.width = "300px";
+      questionTextArea.height = "1000px"; // Tăng chiều cao để kiểm tra cuộn
+      questionTextArea.color = "white";
+      questionTextArea.fontSize = 24;
+      questionTextArea.background = "black";
+      questionTextArea.text = "";
+      questionTextArea.placeholderText = "AIVI will answer you here...";
+      questionTextArea.textWrapping = true;
+
+      // Thêm TextArea vào ScrollViewer
+      scrollViewer.addControl(questionTextArea);
+
+      // Thêm ScrollViewer vào GUI
+      guiCanvas.addControl(scrollViewer);
     },
     startMicrophone() {
       // eslint-disable-next-line no-undef
