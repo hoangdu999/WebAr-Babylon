@@ -251,40 +251,42 @@ export default {
     },
 
     createGUIButtonMicro() {
-      const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+  const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
 
-      // Khởi tạo nút micro
-      const guiButton = Button.CreateSimpleButton("microButton", "Micro");
-      guiButton.width = "150px";
-      guiButton.height = "150px";
-      guiButton.color = "white";
-      guiButton.fontSize = "24px";
-      guiButton.cornerRadius = 75;
-      guiButton.background = "black";
-      guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
-      guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
-      guiButton.left = "160px";
-      guiButton.top = "-100px";
+  // Initialize micro button
+  const guiButton = Button.CreateSimpleButton("microButton", "Micro");
+  guiButton.width = "150px";
+  guiButton.height = "150px";
+  guiButton.color = "white";
+  guiButton.fontSize = "24px";
+  guiButton.cornerRadius = 75;
+  guiButton.background = "black"; // Initial background color
+  guiButton.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+  guiButton.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_CENTER;
+  guiButton.left = "160px";
+  guiButton.top = "-100px";
 
-      // Trạng thái của micro
-      let isListening = false;
+  // Microphone status
+  let isListening = false;
 
-      // Sự kiện khi nhấn nút micro
-      guiButton.onPointerUpObservable.add(() => {
-        if (!isListening) {
-          // Bắt đầu lắng nghe
-          guiButton.textBlock.text = "Listening";
-          this.startMicrophone();
-        } else {
-          // Kết thúc lắng nghe
-          guiButton.textBlock.text = "Micro";
-          this.stopMicrophone();
-        }
-        isListening = !isListening; // Đảo trạng thái lắng nghe
-      });
+  // Event when micro button is pressed
+  guiButton.onPointerUpObservable.add(() => {
+    if (!isListening) {
+      // Start listening
+      guiButton.textBlock.text = "Listening";
+      guiButton.background = "red"; // Change background color to red
+      this.startMicrophone();
+    } else {
+      // Stop listening
+      guiButton.textBlock.text = "Micro";
+      guiButton.background = "black"; // Change background color back to black
+      this.stopMicrophone();
+    }
+    isListening = !isListening; // Toggle the listening state
+  });
 
-      guiCanvas.addControl(guiButton);
-    },
+  guiCanvas.addControl(guiButton);
+},
 
     createAnswerTextArea() {
       const guiCanvas = AdvancedDynamicTexture.CreateFullscreenUI("UI");
