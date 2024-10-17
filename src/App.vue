@@ -4,7 +4,7 @@
     </div>
   </template>
   
-  <script lang="ts">
+  <script lang="">
   import BabylonExamples from './components/BabylonCpn.vue';
   
   export default ({
