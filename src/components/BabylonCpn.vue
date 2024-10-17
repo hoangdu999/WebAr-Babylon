@@ -27,7 +27,6 @@ import {
   AdvancedDynamicTexture,
   Button,
   Control,
-  InputText,
   InputTextArea,
   ScrollViewer,
 } from "@babylonjs/gui";
@@ -40,9 +39,6 @@ import {
 } from "@babylonjs/core/XR";
 import earcut from "earcut";
 import axios from "axios";
-import https from "https-browserify";
-
-// Cấu hình axios để chấp nhận chứng chỉ tự ký
 
 window.earcut = earcut;
 export default {
