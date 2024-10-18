@@ -1,17 +1,16 @@
 <template>
   <div id="app">
-    <BabylonExamples />
+    <BabylonScene />
   </div>
 </template>
 <script>
-  import BabylonExamples from './components/BabylonCpn.vue';
-
-  export default ({
-    name: 'App',
-    components: {
-      BabylonExamples
-    }
-});
+  import BabylonScene from './components/BabylonScene.vue';
+  export default {
+  name: 'App',
+  components: {
+    BabylonScene
+  }
+}
 </script>
 <style>
 </style>
